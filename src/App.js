@@ -7,12 +7,6 @@ import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
 import CardMedia from '@material-ui/core/CardMedia';
-import DialpadIcon from '@material-ui/icons/Dialpad';
-import FormControlLabel from "@material-ui/core/FormControlLabel";
-import GroupAddIcon from '@material-ui/icons/GroupAdd';
-import Paper from "@material-ui/core/Paper";
-import Slide from "@material-ui/core/Slide";
-import Switch from "@material-ui/core/Switch";
 import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import firebase from './config'
@@ -20,43 +14,24 @@ import temp from './assets/img/temp.jpg'
 
 // After
 function App() {
-  const [state, setState] = useState([])
-  const [checked, setChecked] = useState(false);
+
+
   const [joining, setJoining] = useState(false)
   const [hosting, setHosting] = useState(false)
+  const [gameJoined, setGameJoined] = useState(false)
 
-  const handleChange = () => {
-    setChecked((prev) => !prev);
-  };
-  useEffect(() => {
-    const unsubscribe = firebase
-      .firestore()
-      .collection('rooms')
-      .onSnapshot((snap) => {
-        const temp = snap.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }))
-        setState(temp)
-      })
-    return () => unsubscribe()
-  }, [])
+  const [joinCode, setJoinCode] = useState(1234)
+  const [hostCode, setHostcode] = useState(Math.floor(1000 + Math.random() * 9000))
 
+  console.log(hostCode)
   return (
     <>
-      <Slide direction="up" in={checked} mountOnEnter unmountOnExit>
-        <Paper elevation={4} >
-          <svg >
-            <polygon points="0,100 50,00, 100,100" />
-          </svg>
-        </Paper>
-      </Slide>
       <div className="wapper">
-        {!joining && !hosting &&
+        {!joining && !hosting && !gameJoined &&
           <StartCard setHosting={setHosting} setJoining={setJoining} />
         }
-        {joining && <JoinCard setHosting={setHosting} setJoining={setJoining} />}
-        {hosting && <LobbyCard setHosting={setHosting} setJoining={setJoining} state={state} />}
+        {joining && <JoinCard setHosting={setHosting} setJoinCode={setJoinCode} setJoining={setJoining} setGameJoined={setGameJoined} />}
+        {(hosting === true || gameJoined == true) && <LobbyCard hosting={hosting} setHosting={setHosting} setJoining={setJoining} hostCode={gameJoined ? joinCode : hostCode} setGameJoined={setGameJoined}/>}
       </div>
     </>
 
@@ -65,22 +40,50 @@ function App() {
 
 }
 const LobbyCard = (props) => {
-const {state} = props
+  const { joinCode, hosting, setGameJoined, setJoining, setHosting, hostCode } = props
+  const [state, setState] = useState([])
   useEffect(() => {
+
+
+
+
+    firebase
+      .firestore()
+      .collection('rooms').doc(`${hostCode}`).set({ players: [{ name: "host2" }] }, { merge: true })
+
     const unsubscribe = firebase
       .firestore()
-      .collection('rooms').add({ code: "hej", players: [{ name: "host" }] })
-    return () =>
-      unsubscribe()
+      .collection('rooms')
+      .doc(`${hostCode}`)
+      .onSnapshot((snap) => {
+        if (snap.docs?.length) {
+
+          const temp = snap.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }))
+          setState(temp)
+        }
+      })
+    return () => unsubscribe()
 
   }, [])
+  // useEffect(() => {
+
+  //   // .collection('rooms').add({ code: "hej", players: [{ name: "host" }] })
+  //   //   washingtonRef.update({
+  //   //     regions: firebase.firestore.FieldValue.arrayUnion("greater_virginia")
+  //   // });
+
+
+  // }, [])
 
   return (
     <Card className="card-class" style={{ padding: "1rem" }}>
       <CardContent>
         <Typography variant="h5" component="h2">
-          Lobby 12345
-      </Typography>
+          Lobby {hostCode}
+        </Typography>
         <ul>
           {state.map(elem => <li>elem</li>)}
         </ul>
@@ -91,8 +94,9 @@ const {state} = props
       <CardActions style={{ display: "flex", justifyContent: 'space-around' }}>
 
         <Button size="small" color="primary" onClick={() => {
-          props.setJoining(false)
-          props.setHosting(false)
+          setJoining(false)
+          setHosting(false)
+          setGameJoined(false)
         }}>
           Avbryt
       </Button>
@@ -104,27 +108,33 @@ const {state} = props
   )
 }
 const JoinCard = (props) => {
+  const { joinCode, setJoinCode, setJoining, setHosting, setGameJoined } = props
+
+
   return (
     <Card className="card-class" style={{ padding: "1rem" }}>
       <CardContent>
         <Typography variant="h5" component="h2">
-          Kod:
+          Joinsa spel
         </Typography>
 
       </CardContent>
       <CardActions >
 
-        <TextField id="outlined-basic" label="Outlined" variant="outlined" />
+        <TextField value={joinCode} id="outlined-basic" label="Anslutningskod" variant="outlined" onChange={(e) => setJoinCode(e.target.value)} />
       </CardActions>
 
       <CardActions style={{ display: "flex", justifyContent: 'space-around' }}>
         <Button size="small" color="primary" onClick={() => {
-          props.setJoining(false)
-          props.setHosting(false)
+          setJoining(false)
+          setHosting(false)
         }}>
           Avbryt
       </Button>
-        <Button size="small" color="primary">
+        <Button size="small" color="primary" onClick={() =>  {
+        setJoining(false)
+          setHosting(false)
+          setGameJoined(true)}}>
           Hitta lobby
       </Button>
       </CardActions>
