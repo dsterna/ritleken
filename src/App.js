@@ -17,6 +17,7 @@ import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
 import CardMedia from '@material-ui/core/CardMedia';
+import Container from '@material-ui/core/Container';
 import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import firebase from './config'
@@ -53,6 +54,53 @@ function App() {
 
 
 }
+
+
+const StartCard = (props) => {
+  const name = useSelector(state => state.name)
+  const dispatch = useDispatch()
+
+  return (
+    <Container maxWidth="sm" className="container" >
+      <CardMedia
+        component="img"
+        alt="Contemplative Reptile"
+        height="140"
+        image={temp}
+        title="tmep"
+      />
+      <CardContent>
+        <Typography gutterBottom variant="h5" component="h2">
+          Ritleken
+        </Typography>
+        <Typography variant="body2" color="textSecondary" component="p">
+          Lorem, ipsum dolor sit amet consectetur adipisicing elit. Saepe non rem inventore repellendus est exercitationem nihil earum consequatur libero corrupti?
+        </Typography>
+      </CardContent>
+
+      <CardActions style={{ display: "flex", justifyContent: 'space-around' }}>
+
+        <Link to="/join"><Button size="small" color="primary" onClick={() => {
+          dispatch(isHost(false))
+
+        }}>Joina spel  </Button></Link>
+
+
+
+
+        <Link to="/lobby"> <Button size="small" color="primary" onClick={() => {
+
+          dispatch(isHost(true))
+          dispatch(changeGameCode(name.code))
+
+        }
+        }>Skapa rum</Button></Link>
+
+      </CardActions>
+    </Container>
+  )
+}
+
 const LobbyCard = (props) => {
   const [players, setPlayers] = useState([])
   const name = useSelector(state => state.name)
@@ -97,6 +145,7 @@ const LobbyCard = (props) => {
   }
 
   return (
+
     <Card className="card-class" style={{ padding: "1rem" }}>
       <CardContent>
         <Typography variant="h5" component="h2">
@@ -117,10 +166,7 @@ const LobbyCard = (props) => {
         <Link to="/">   <Button size="small" color="primary" onClick={() => {
 
         }}>Avbryt </Button></Link>
-
         {isHost && <Link to="/write"><Button size="small" color="primary" onClick={() => {
-
-
         }}> Starta  </Button>
         </Link>}
       </CardActions>
@@ -160,51 +206,6 @@ const JoinCard = (props) => {
   )
 }
 
-const StartCard = (props) => {
-  const name = useSelector(state => state.name)
-  const dispatch = useDispatch()
-
-  return (
-    <Card className="card-class">
-      <CardMedia
-        component="img"
-        alt="Contemplative Reptile"
-        height="140"
-        image={temp}
-        title="tmep"
-      />
-      <CardContent>
-        <Typography gutterBottom variant="h5" component="h2">
-          Ritleken
-        </Typography>
-        <Typography variant="body2" color="textSecondary" component="p">
-          Lorem, ipsum dolor sit amet consectetur adipisicing elit. Saepe non rem inventore repellendus est exercitationem nihil earum consequatur libero corrupti?
-        </Typography>
-      </CardContent>
-
-      <CardActions style={{ display: "flex", justifyContent: 'space-around' }}>
-
-        <Link to="/join"><Button size="small" color="primary" onClick={() => {
-          dispatch(isHost(false))
-
-        }}>Joina spel  </Button></Link>
-
-
-
-
-        <Link to="/lobby"> <Button size="small" color="primary" onClick={() => {
-
-          dispatch(isHost(true))
-          dispatch(changeGameCode(name.code))
-
-        }
-        }>Skapa rum</Button></Link>
-
-      </CardActions>
-    </Card>
-  )
-}
-
 
 const WriteCard = (props) => {
   const handleDone = (e) => {
@@ -212,7 +213,7 @@ const WriteCard = (props) => {
   }
 
   return (
-    <Card className="card-class">
+    <Container maxWidth="sm" className="container" >
 
       <CardContent>
         <Typography gutterBottom variant="h5" component="h3" style={{ marginBottom: 0 }}>
@@ -235,7 +236,7 @@ const WriteCard = (props) => {
           }>Redo</Button> </Link>
 
       </CardActions>
-    </Card>
+    </Container>
   )
 }
 
@@ -244,7 +245,7 @@ const DrawCard = (props) => {
   const dispatch = useDispatch()
 
   return (
-    <Card className="card-class">
+    <Container maxWidth="sm" className="container" >
       <CardContent>
         <Typography gutterBottom variant="h5" component="h2">
           {`Rita en ${''}`}
@@ -257,7 +258,7 @@ const DrawCard = (props) => {
           dispatch(isHost(false))
         }}>Redo  </Button></Link>
       </CardActions>
-    </Card>
+    </Container>
   )
 }
 
