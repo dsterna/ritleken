@@ -3,7 +3,7 @@ import './App.scss'
 import {
   Link,
   Route,
-  BrowserRouter as Router,
+  HashRouter as Router,
   Switch,
   useHistory
 } from "react-router-dom";
@@ -112,9 +112,9 @@ const LobbyCard = (props) => {
         }}>
           <Link to="/">Avbryt</Link>
         </Button>
-        {isHost && players.length > 1 && <Button size="small" color="primary" onClick={() => { }}> Starta  </Button>}
+        {isHost && players.length > 1 && <Button size="small" color="primary" onClick={() => {
 
-
+         }}> Starta  </Button>}
       </CardActions>
     </Card>
   )
