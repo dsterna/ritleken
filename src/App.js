@@ -1,6 +1,15 @@
 import './App.scss'
 
+import {
+  Link,
+  Route,
+  BrowserRouter as Router,
+  Switch,
+  useHistory
+} from "react-router-dom";
 import React, { useEffect, useState } from 'react'
+import { changeGameCode, changeName, isHost } from './actions'
+import { useDispatch, useSelector } from 'react-redux'
 
 import Button from '@material-ui/core/Button';
 import Card from '@material-ui/core/Card';
@@ -12,137 +21,140 @@ import Typography from '@material-ui/core/Typography';
 import firebase from './config'
 import temp from './assets/img/temp.jpg'
 
-// After
 function App() {
 
 
-  const [joining, setJoining] = useState(false)
-  const [hosting, setHosting] = useState(false)
-  const [gameJoined, setGameJoined] = useState(false)
-
-  const [joinCode, setJoinCode] = useState(1234)
-  const [hostCode, setHostcode] = useState(Math.floor(1000 + Math.random() * 9000))
-
-  console.log(hostCode)
   return (
-    <>
-      <div className="wapper">
-        {!joining && !hosting && !gameJoined &&
-          <StartCard setHosting={setHosting} setJoining={setJoining} />
-        }
-        {joining && <JoinCard setHosting={setHosting} setJoinCode={setJoinCode} setJoining={setJoining} setGameJoined={setGameJoined} />}
-        {(hosting === true || gameJoined == true) && <LobbyCard hosting={hosting} setHosting={setHosting} setJoining={setJoining} hostCode={gameJoined ? joinCode : hostCode} setGameJoined={setGameJoined}/>}
-      </div>
-    </>
-
+    <div >
+      <Router>
+        <div className="wapper">
+          <Switch>
+            <Route exact path="/lobby">
+              <LobbyCard />
+            </Route>
+            <Route exact path="/join">
+              <JoinCard />
+            </Route>
+            <Route path="/">
+              <StartCard />
+            </Route>
+          </Switch>
+        </div>
+      </Router>
+    </div>
   );
 
 
 }
 const LobbyCard = (props) => {
-  const { joinCode, hosting, setGameJoined, setJoining, setHosting, hostCode } = props
-  const [state, setState] = useState([])
+
+  const [players, setPlayers] = useState([])
+  const name = useSelector(state => state.name)
+  const isHost = useSelector(state => state.game.isHost)
+  const gameCode = useSelector(state => state.game.gameCode)
+  const history = useHistory();
+  const [customName, setCustomName] = useState(name.userName)
+  const dispatch = useDispatch()
+
   useEffect(() => {
+    function getPlayers() {
+      const unsubscribe = firebase
+        .firestore()
+        .collection('rooms')
+        .doc(`${gameCode}`)
+        .onSnapshot((snap) => {
+          if (snap.data())
+            setPlayers(Object.values(snap.data()))
+        })
+      return () => unsubscribe()
+    }
+
+    if (gameCode === "") {
+      history.push("/");
+    }
+    else {
+      firebase
+        .firestore()
+        .collection('rooms').doc(`${gameCode}`).set({ [name.code]: { ...name, isHost: true } }, { merge: true })
+        .then(() => getPlayers())
+    }
 
 
+  }, [gameCode, history, name])
 
-
+  const handleNameChange = (e) => {
+    e.preventDefault()
+    dispatch(changeName(customName))
     firebase
       .firestore()
-      .collection('rooms').doc(`${hostCode}`).set({ players: [{ name: "host2" }] }, { merge: true })
-
-    const unsubscribe = firebase
-      .firestore()
-      .collection('rooms')
-      .doc(`${hostCode}`)
-      .onSnapshot((snap) => {
-        if (snap.docs?.length) {
-
-          const temp = snap.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          }))
-          setState(temp)
-        }
-      })
-    return () => unsubscribe()
-
-  }, [])
-  // useEffect(() => {
-
-  //   // .collection('rooms').add({ code: "hej", players: [{ name: "host" }] })
-  //   //   washingtonRef.update({
-  //   //     regions: firebase.firestore.FieldValue.arrayUnion("greater_virginia")
-  //   // });
-
-
-  // }, [])
+      .collection('rooms').doc(`${gameCode}`).update({ [name.code]: { ...name, userName: customName } })
+  }
 
   return (
     <Card className="card-class" style={{ padding: "1rem" }}>
       <CardContent>
         <Typography variant="h5" component="h2">
-          Lobby {hostCode}
+          Lobby {gameCode}
         </Typography>
         <ul>
-          {state.map(elem => <li>elem</li>)}
+          {players.map(elem => <li key={elem.code}>{elem.userName}</li>)}
         </ul>
       </CardContent>
       <CardActions >
       </CardActions>
-
+      <form onSubmit={(e) => handleNameChange(e)}>
+        <TextField value={customName} id="outlined-basic" label="Namn" variant="outlined" onChange={(e) => setCustomName(e.target.value)} />
+        {/* <Button size="small" type="submit">Spara Namn</Button> */}
+      </form>
       <CardActions style={{ display: "flex", justifyContent: 'space-around' }}>
-
         <Button size="small" color="primary" onClick={() => {
-          setJoining(false)
-          setHosting(false)
-          setGameJoined(false)
+
         }}>
-          Avbryt
-      </Button>
-        <Button size="small" color="primary" disabled={true}>
-          Starta Spel
-    </Button>
+          <Link to="/">Avbryt</Link>
+        </Button>
+        {isHost && players.length > 1 && <Button size="small" color="primary" onClick={() => { }}> Starta  </Button>}
+
+
       </CardActions>
     </Card>
   )
 }
 const JoinCard = (props) => {
-  const { joinCode, setJoinCode, setJoining, setHosting, setGameJoined } = props
-
-
+  const [joinCode, setJoinCode] = useState(1234)
+  const dispatch = useDispatch()
   return (
     <Card className="card-class" style={{ padding: "1rem" }}>
       <CardContent>
         <Typography variant="h5" component="h2">
-          Joinsa spel
+          Joina spel
         </Typography>
 
       </CardContent>
       <CardActions >
-
         <TextField value={joinCode} id="outlined-basic" label="Anslutningskod" variant="outlined" onChange={(e) => setJoinCode(e.target.value)} />
       </CardActions>
 
       <CardActions style={{ display: "flex", justifyContent: 'space-around' }}>
         <Button size="small" color="primary" onClick={() => {
-          setJoining(false)
-          setHosting(false)
         }}>
-          Avbryt
-      </Button>
-        <Button size="small" color="primary" onClick={() =>  {
-        setJoining(false)
-          setHosting(false)
-          setGameJoined(true)}}>
-          Hitta lobby
-      </Button>
+          <Link to="/">Avbryt</Link>
+        </Button>
+        <Button size="small" color="primary" onClick={() => {
+          // todo: kör en find och kolla om spelet finns, om nej, redirecta inte 
+          dispatch(changeGameCode(joinCode))
+        }
+        }>
+          <Link to="/lobby">Hitta spel</Link>
+        </Button>
       </CardActions>
     </Card>
   )
 }
 
 const StartCard = (props) => {
+  const name = useSelector(state => state.name)
+  const dispatch = useDispatch()
+
   return (
     <Card className="card-class">
       <CardMedia
@@ -163,15 +175,22 @@ const StartCard = (props) => {
 
       <CardActions style={{ display: "flex", justifyContent: 'space-around' }}>
         <Button size="small" color="primary" onClick={() => {
-          props.setJoining(true)
+          dispatch(isHost(false))
+
         }}>
-          Joina spel
-      </Button>
-        <Button size="small" color="primary" onClick={() =>
-          props.setHosting(true)
+          <Link to="/join">Joina spel</Link>
+
+        </Button>
+        <Button size="small" color="primary" onClick={() => {
+
+          dispatch(isHost(true))
+          dispatch(changeGameCode(name.code))
+
+        }
         }>
-          Skapa rum
-      </Button>
+
+          <Link to="/lobby">Skapa rum</Link>
+        </Button>
       </CardActions>
     </Card>
   )
