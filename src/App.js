@@ -12,6 +12,7 @@ import { changeGameCode, changeName, isHost } from './actions'
 import { useDispatch, useSelector } from 'react-redux'
 
 import Button from '@material-ui/core/Button';
+import CanvasDraw from "react-canvas-draw";
 import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
@@ -35,6 +36,12 @@ function App() {
             <Route exact path="/join">
               <JoinCard />
             </Route>
+            <Route exact path="/draw">
+              <DrawCard />
+            </Route>
+            <Route exact path="/write">
+              <WriteCard />
+            </Route>
             <Route path="/">
               <StartCard />
             </Route>
@@ -47,7 +54,6 @@ function App() {
 
 }
 const LobbyCard = (props) => {
-
   const [players, setPlayers] = useState([])
   const name = useSelector(state => state.name)
   const isHost = useSelector(state => state.game.isHost)
@@ -107,14 +113,16 @@ const LobbyCard = (props) => {
         {/* <Button size="small" type="submit">Spara Namn</Button> */}
       </form>
       <CardActions style={{ display: "flex", justifyContent: 'space-around' }}>
-        <Button size="small" color="primary" onClick={() => {
 
-        }}>
-          <Link to="/">Avbryt</Link>
-        </Button>
-        {isHost && players.length > 1 && <Button size="small" color="primary" onClick={() => {
+        <Link to="/">   <Button size="small" color="primary" onClick={() => {
 
-         }}> Starta  </Button>}
+        }}>Avbryt </Button></Link>
+
+        {isHost && <Link to="/write"><Button size="small" color="primary" onClick={() => {
+
+
+        }}> Starta  </Button>
+        </Link>}
       </CardActions>
     </Card>
   )
@@ -135,17 +143,18 @@ const JoinCard = (props) => {
       </CardActions>
 
       <CardActions style={{ display: "flex", justifyContent: 'space-around' }}>
-        <Button size="small" color="primary" onClick={() => {
-        }}>
-          <Link to="/">Avbryt</Link>
-        </Button>
-        <Button size="small" color="primary" onClick={() => {
+
+        <Link to="/"><Button size="small" color="primary" onClick={() => {
+
+        }}>Avbryt </Button></Link>
+
+
+        <Link to="/lobby"><Button size="small" color="primary" onClick={() => {
           // todo: kör en find och kolla om spelet finns, om nej, redirecta inte 
           dispatch(changeGameCode(joinCode))
         }
-        }>
-          <Link to="/lobby">Hitta spel</Link>
-        </Button>
+        }>Hitta spel </Button></Link>
+
       </CardActions>
     </Card>
   )
@@ -174,23 +183,79 @@ const StartCard = (props) => {
       </CardContent>
 
       <CardActions style={{ display: "flex", justifyContent: 'space-around' }}>
-        <Button size="small" color="primary" onClick={() => {
+
+        <Link to="/join"><Button size="small" color="primary" onClick={() => {
           dispatch(isHost(false))
 
-        }}>
-          <Link to="/join">Joina spel</Link>
+        }}>Joina spel  </Button></Link>
 
-        </Button>
-        <Button size="small" color="primary" onClick={() => {
+
+
+
+        <Link to="/lobby"> <Button size="small" color="primary" onClick={() => {
 
           dispatch(isHost(true))
           dispatch(changeGameCode(name.code))
 
         }
-        }>
+        }>Skapa rum</Button></Link>
 
-          <Link to="/lobby">Skapa rum</Link>
-        </Button>
+      </CardActions>
+    </Card>
+  )
+}
+
+
+const WriteCard = (props) => {
+  const handleDone = (e) => {
+    e.precentDefault()
+  }
+
+  return (
+    <Card className="card-class">
+
+      <CardContent>
+        <Typography gutterBottom variant="h5" component="h3" style={{ marginBottom: 0 }}>
+          Skriv ditt ord:
+        </Typography>
+
+      </CardContent>
+      <CardActions>
+        <form onSubmit={() => handleDone()}> <TextField id="standard-basic" label="" /></form>
+      </CardActions>
+      <CardActions style={{ display: "flex", justifyContent: 'space-around' }}>
+
+
+
+
+        <Link to="/draw">
+          <Button size="small" color="primary" onClick={() => {
+
+          }
+          }>Redo</Button> </Link>
+
+      </CardActions>
+    </Card>
+  )
+}
+
+const DrawCard = (props) => {
+  const name = useSelector(state => state.name)
+  const dispatch = useDispatch()
+
+  return (
+    <Card className="card-class">
+      <CardContent>
+        <Typography gutterBottom variant="h5" component="h2">
+          {`Rita en ${''}`}
+        </Typography>
+
+      </CardContent>
+      <CardActions > <CanvasDraw /></CardActions>
+      <CardActions style={{ display: "flex", justifyContent: 'space-around' }}>
+        <Link to="/write"><Button size="small" color="primary" onClick={() => {
+          dispatch(isHost(false))
+        }}>Redo  </Button></Link>
       </CardActions>
     </Card>
   )
