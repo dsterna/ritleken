@@ -175,7 +175,7 @@ const LobbyCard = (props) => {
 
     })
 
-    dispatch(setNrOfPlayers(len + 1))
+    // dispatch(setNrOfPlayers(len + 1))
 
     db.update({ round: 0, rounds: len + 1, players: playerObject })
 
@@ -194,6 +194,7 @@ const LobbyCard = (props) => {
 
   useEffect(() => {
     if (gameStarted) {
+
       history.push("/write")
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -261,21 +262,25 @@ const JoinCard = (props) => {
 const WriteCard = (props) => {
   // skulle kunna sätta statet i local storage och ha som backup om man råkar uppdatera sidan
   const name = useSelector(state => state.name.code)
-  const nrOfPlayers = useSelector(state => state.game.nrOfPlayers)
+  // const nrOfPlayers = useSelector(state => state.game.nrOfPlayers)
   const gameCode = useSelector(state => state.game.gameCode)
 
   const db = gameCode && firebase.firestore().collection('rooms').doc(`${gameCode}`)
+  const [nrOfPlayers, setNrOfPlayers] = useState(99)
   const [players, setPlayers] = useState([])
   const [text, setText] = useState("")
   const [round, setRound] = useState(0)
   const [nrOfReady, setNrOfReady] = useState(0)
   const [ready, setReady] = useState(false)
+  const history = useHistory();
+
   useEffect(() => {
     const unsubscribe = db.onSnapshot((snap) => {
       if (snap.data()) {
         setPlayers(snap.data().players)
         setRound(snap.data().round)
         setNrOfReady(Object.values(snap.data().players).filter(elem => elem.ready).length)
+        setNrOfPlayers(Object.values(snap.data().players).length)
       }
     })
     return () => unsubscribe()
@@ -297,20 +302,24 @@ const WriteCard = (props) => {
   }
 
   useEffect(() => {
+    console.log("nrOfReady", nrOfReady)
+    console.log("nrOfPlayers", nrOfPlayers)
     if (nrOfReady === nrOfPlayers) {
-      console.log("vi ska vidare")
-      console.log()
+      if (isHost) {
+        db.update({ round: round + 1 })
+      }
+      history.push("/draw")
     }
   }, [nrOfReady])
 
   return (
     <Container maxWidth="sm" className="container" >
       <CardContent>
-        <Typography gutterBottom variant="h5" component="h3" style={{ marginBottom: 0 }}>
+        <Typography gutterBottom variant="h5" component="h3" style={{ marginBottom: 0, textAlign: "center" }}>
           Skriv ditt ord:
         </Typography>
       </CardContent>
-      <CardActions>
+      <CardActions style={{ display: "flex", justifyContent: 'space-around', justifyContent: 'center' }}>
         <form onSubmit={(e) => handleDone(e)}> <TextField disabled={ready} id="standard-basic" label="" value={text} onChange={(e) => { setText(e.target.value) }} /></form>
         <br />
       </CardActions>
@@ -333,22 +342,77 @@ const WriteCard = (props) => {
 }
 
 const DrawCard = (props) => {
-  const name = useSelector(state => state.name)
-  const dispatch = useDispatch()
+  // skulle kunna sätta statet i local storage och ha som backup om man råkar uppdatera sidan
+  const name = useSelector(state => state.name.code)
+  const nrOfPlayers = useSelector(state => state.game.nrOfPlayers)
+  const gameCode = useSelector(state => state.game.gameCode)
+
+  const db = gameCode && firebase.firestore().collection('rooms').doc(`${gameCode}`)
+  const [players, setPlayers] = useState([])
+  const [word, setWord] = useState("")
+  const [canvasData, setCanvasData] = useState("")
+
+  const [round, setRound] = useState(0)
+  const [nrOfReady, setNrOfReady] = useState(0)
+  const [ready, setReady] = useState(false)
+  const history = useHistory();
+
+  useEffect(() => {
+    const unsubscribe = db.onSnapshot((snap) => {
+      if (snap.data()) {
+        const tempPlayers = snap.data().players
+        const tempRound = snap.data().round
+        setPlayers(tempPlayers)
+        setRound(tempRound)
+        setNrOfReady(Object.values(tempPlayers).filter(elem => elem.ready).length)
+        const playerOfWord = tempPlayers[name].order[tempRound]
+
+        console.log(tempPlayers)
+        console.log(tempRound)
+        console.log(playerOfWord)
+        console.log(tempPlayers[playerOfWord][round - 1])
+        setWord(tempPlayers[playerOfWord][round - 1])
+      }
+    })
+    return () => unsubscribe()
+  }, [])
+
+  const handleDone = (e) => {
+    e.preventDefault()
+    setReady(true)
+    const tempPlayer = players[name]
+    tempPlayer.ready = true
+    tempPlayer[round] = canvasData
+    var p = "players";
+    var update = {};
+    update[p + '.' + name] = tempPlayer;
+    db.update(update)
+  }
+
 
   return (
     <Container maxWidth="sm" className="container" >
       <CardContent>
-        <Typography gutterBottom variant="h5" component="h2">
-          {`Rita en ${''}`}
+        <Typography gutterBottom variant="h5" component="h2" style={{ textAlign: "center" }}>
+          {`Rita ${word}`}
         </Typography>
 
       </CardContent>
-      <CardActions > <CanvasDraw /></CardActions>
+      <CardActions style={{ display: "flex", justifyContent: 'space-around', justifyContent: 'center' }}> <CanvasDraw /></CardActions>
+      <br></br>
       <CardActions style={{ display: "flex", justifyContent: 'space-around' }}>
-        <Link to="/write"><Button size="small" color="primary" onClick={() => {
-          dispatch(isHost(false))
-        }}>Redo  </Button></Link>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={ready}
+              onClick={(e) => handleDone(e)}
+              name="checkedB"
+              color="primary"
+              disabled={ready}
+            />
+          }
+          label={`Redo (${nrOfReady})`}
+        />
       </CardActions>
     </Container>
   )
