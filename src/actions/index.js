@@ -26,3 +26,9 @@ export const changeName = (str) => {
         payload: str
     }
 }
+export const setNrOfPlayers = (int) => {
+    return {
+        type: 'SETNUMBEROFPLAYERS',
+        payload: int
+    }
+}
