@@ -43,38 +43,47 @@ const hej = (params) => {
 //     })
 // }
 
-hej(
-    [
-        {
-            "userName": "spelare-1119",
-            "isHost": false,
-            "code": 1119,
-            "index": 0
-        },
-        {
-            "code": 2981,
-            "isHost": false,
-            "userName": "spelare-2981",
-            "index": 1
-        },
-        {
-            "userName": "spelare-8042",
-            "code": 8042,
-            "isHost": false,
-            "index": 2
-        },
-        // {
-        //     "isHost": true,
-        //     "userName": "spelare-8308",
-        //     "code": 8308,
-        //     "index": 3
-        // },
-        // {
-        //     "isHost": true,
-        //     "userName": "spelare-8308",
-        //     "code": 1234,
-        //     "index": 4
-        // }
+// hej(
+//     [
+//         {
+//             "userName": "spelare-1119",
+//             "isHost": false,
+//             "code": 1119,
+//             "index": 0
+//         },
+//         {
+//             "code": 2981,
+//             "isHost": false,
+//             "userName": "spelare-2981",
+//             "index": 1
+//         },
+//         {
+//             "userName": "spelare-8042",
+//             "code": 8042,
+//             "isHost": false,
+//             "index": 2
+//         },
+//         // {
+//         //     "isHost": true,
+//         //     "userName": "spelare-8308",
+//         //     "code": 8308,
+//         //     "index": 3
+//         // },
+//         // {
+//         //     "isHost": true,
+//         //     "userName": "spelare-8308",
+//         //     "code": 1234,
+//         //     "index": 4
+//         // }
 
 
-    ])
+//     ])
+
+
+
+
+const hej2 = (params) => {
+    Object.keys(params).forEach((elem) => params[elem].hej = true)    
+}
+
+hej2({ one: { hej: false }, two: { hej: false } })

@@ -7,7 +7,7 @@ import {
   Switch,
   useHistory
 } from "react-router-dom";
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { changeGameCode, changeName, isHost, setNrOfPlayers } from './actions'
 import { useDispatch, useSelector } from 'react-redux'
 
@@ -277,10 +277,14 @@ const WriteCard = (props) => {
   useEffect(() => {
     const unsubscribe = db.onSnapshot((snap) => {
       if (snap.data()) {
-        setPlayers(snap.data().players)
-        setRound(snap.data().round)
-        setNrOfReady(Object.values(snap.data().players).filter(elem => elem.ready).length)
-        setNrOfPlayers(Object.values(snap.data().players).length)
+
+        const tempPlayers = snap.data().players
+        const tempRound = snap.data().round
+
+        setPlayers(tempPlayers)
+        setRound(tempRound)
+        setNrOfReady(Object.values(tempPlayers).filter(elem => elem.ready).length)
+        setNrOfPlayers(Object.values(tempPlayers).length)
       }
     })
     return () => unsubscribe()
@@ -306,7 +310,9 @@ const WriteCard = (props) => {
     console.log("nrOfPlayers", nrOfPlayers)
     if (nrOfReady === nrOfPlayers) {
       if (isHost) {
-        db.update({ round: round + 1 })
+        const tempPlayers = players
+        Object.keys(players).forEach((elem) => tempPlayers[elem].ready = false)
+        db.update({ round: round + 1, players: tempPlayers })
       }
       history.push("/draw")
     }
@@ -344,18 +350,28 @@ const WriteCard = (props) => {
 const DrawCard = (props) => {
   // skulle kunna sätta statet i local storage och ha som backup om man råkar uppdatera sidan
   const name = useSelector(state => state.name.code)
-  const nrOfPlayers = useSelector(state => state.game.nrOfPlayers)
   const gameCode = useSelector(state => state.game.gameCode)
-
+  const ref = useRef("")
   const db = gameCode && firebase.firestore().collection('rooms').doc(`${gameCode}`)
   const [players, setPlayers] = useState([])
   const [word, setWord] = useState("")
-  const [canvasData, setCanvasData] = useState("")
-
+  
   const [round, setRound] = useState(0)
   const [nrOfReady, setNrOfReady] = useState(0)
+  const [nrOfPlayers, setNrOfPlayers] = useState(99)
   const [ready, setReady] = useState(false)
   const history = useHistory();
+ 
+
+/**
+ * Have bool DrawRound that is rounds % 2 to get if Draw/write
+ * 
+ * On each allReady, check if rounds ==== nrOfPlayers
+ * 
+ * Remove word if !DrawRound
+ * ShowTextEdit if Drawround
+ * host sets reday status and increments rounds
+ */
 
   useEffect(() => {
     const unsubscribe = db.onSnapshot((snap) => {
@@ -365,13 +381,14 @@ const DrawCard = (props) => {
         setPlayers(tempPlayers)
         setRound(tempRound)
         setNrOfReady(Object.values(tempPlayers).filter(elem => elem.ready).length)
-        const playerOfWord = tempPlayers[name].order[tempRound]
+        setNrOfPlayers(Object.values(tempPlayers).length)
 
-        console.log(tempPlayers)
-        console.log(tempRound)
-        console.log(playerOfWord)
-        console.log(tempPlayers[playerOfWord][round - 1])
-        setWord(tempPlayers[playerOfWord][round - 1])
+        const playerOfWord = tempPlayers[name].order[tempRound]
+        // console.log(tempPlayers)
+        // console.log(tempRound)
+        // console.log(playerOfWord)
+        // console.log(tempPlayers[playerOfWord][tempRound - 1])
+        setWord(tempPlayers[playerOfWord][tempRound - 1])
       }
     })
     return () => unsubscribe()
@@ -382,13 +399,26 @@ const DrawCard = (props) => {
     setReady(true)
     const tempPlayer = players[name]
     tempPlayer.ready = true
-    tempPlayer[round] = canvasData
+    tempPlayer[round] = ref.current.getSaveData()
     var p = "players";
     var update = {};
     update[p + '.' + name] = tempPlayer;
     db.update(update)
   }
 
+  useEffect(() => {
+    console.log("nrOfReady", nrOfReady)
+    console.log("nrOfPlayers", nrOfPlayers)
+    if (nrOfReady === nrOfPlayers) {
+      console.log(ref.current)
+      console.log(ref.current.getSaveData())
+
+      if (isHost) {
+        db.update({ round: round + 1 })
+      }
+      history.push("/draw")
+    }
+  }, [nrOfReady])
 
   return (
     <Container maxWidth="sm" className="container" >
@@ -398,7 +428,9 @@ const DrawCard = (props) => {
         </Typography>
 
       </CardContent>
-      <CardActions style={{ display: "flex", justifyContent: 'space-around', justifyContent: 'center' }}> <CanvasDraw /></CardActions>
+      <CardActions style={{ display: "flex", justifyContent: 'space-around', justifyContent: 'center' }}>
+        <CanvasDraw disabled={ready} ref={ref} />
+      </CardActions>
       <br></br>
       <CardActions style={{ display: "flex", justifyContent: 'space-around' }}>
         <FormControlLabel
