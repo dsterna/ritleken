@@ -1,25 +1,25 @@
 {
   "files": {
-    "main.css": "/ritleken/static/css/main.c3cdc047.chunk.css",
-    "main.js": "/ritleken/static/js/main.62ee7e14.chunk.js",
-    "main.js.map": "/ritleken/static/js/main.62ee7e14.chunk.js.map",
+    "main.css": "/ritleken/static/css/main.c3ff709d.chunk.css",
+    "main.js": "/ritleken/static/js/main.fe70df50.chunk.js",
+    "main.js.map": "/ritleken/static/js/main.fe70df50.chunk.js.map",
     "runtime-main.js": "/ritleken/static/js/runtime-main.bf36d09f.js",
     "runtime-main.js.map": "/ritleken/static/js/runtime-main.bf36d09f.js.map",
     "static/css/2.660c99f9.chunk.css": "/ritleken/static/css/2.660c99f9.chunk.css",
-    "static/js/2.b189f62e.chunk.js": "/ritleken/static/js/2.b189f62e.chunk.js",
-    "static/js/2.b189f62e.chunk.js.map": "/ritleken/static/js/2.b189f62e.chunk.js.map",
+    "static/js/2.624a3572.chunk.js": "/ritleken/static/js/2.624a3572.chunk.js",
+    "static/js/2.624a3572.chunk.js.map": "/ritleken/static/js/2.624a3572.chunk.js.map",
     "index.html": "/ritleken/index.html",
     "static/css/2.660c99f9.chunk.css.map": "/ritleken/static/css/2.660c99f9.chunk.css.map",
-    "static/css/main.c3cdc047.chunk.css.map": "/ritleken/static/css/main.c3cdc047.chunk.css.map",
-    "static/js/2.b189f62e.chunk.js.LICENSE.txt": "/ritleken/static/js/2.b189f62e.chunk.js.LICENSE.txt",
+    "static/css/main.c3ff709d.chunk.css.map": "/ritleken/static/css/main.c3ff709d.chunk.css.map",
+    "static/js/2.624a3572.chunk.js.LICENSE.txt": "/ritleken/static/js/2.624a3572.chunk.js.LICENSE.txt",
     "static/media/index.css": "/ritleken/static/media/roboto-vietnamese-400-normal.52cebac0.woff2",
     "static/media/temp.1f0dee70.jpg": "/ritleken/static/media/temp.1f0dee70.jpg"
   },
   "entrypoints": [
     "static/js/runtime-main.bf36d09f.js",
     "static/css/2.660c99f9.chunk.css",
-    "static/js/2.b189f62e.chunk.js",
-    "static/css/main.c3cdc047.chunk.css",
-    "static/js/main.62ee7e14.chunk.js"
+    "static/js/2.624a3572.chunk.js",
+    "static/css/main.c3ff709d.chunk.css",
+    "static/js/main.fe70df50.chunk.js"
   ]
 }
