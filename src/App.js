@@ -8,7 +8,7 @@ import {
   useHistory
 } from "react-router-dom";
 import React, { useEffect, useRef, useState } from 'react'
-import { changeGameCode, changeName, isHost, setNrOfPlayers } from './actions'
+import { changeCodeName, changeGameCode, changeName, isHost } from './actions'
 import { useDispatch, useSelector } from 'react-redux'
 
 import Button from '@material-ui/core/Button';
@@ -39,11 +39,14 @@ function App() {
             <Route exact path="/join">
               <JoinCard />
             </Route>
+            <Route exact path="/write">
+              <WriteCard />
+            </Route>
             <Route exact path="/draw">
               <DrawCard />
             </Route>
-            <Route exact path="/write">
-              <WriteCard />
+            <Route exact path="/done">
+              <DoneCard />
             </Route>
             <Route path="/">
               <StartCard />
@@ -110,12 +113,6 @@ const LobbyCard = (props) => {
 
 
   const db = gameCode && firebase.firestore().collection('rooms').doc(`${gameCode}`)
-
-
-
-
-
-
   useEffect(() => {
     async function getPlayers() {
       const unsubscribe = firebase
@@ -123,11 +120,14 @@ const LobbyCard = (props) => {
         .collection('rooms')
         .doc(`${gameCode}`)
         .onSnapshot((snap) => {
-          if (snap.data()) {
-            setPlayers(Object.values(snap.data().players))
-            setPlayerObj(snap.data().players)
+          if (snap) {
+            if (snap.data()) {
+              console.log("in here?")
+              setPlayers(Object.values(snap.data().players))
+              setPlayerObj(snap.data().players)
+              setGameStarted(snap.data().gameStarted)
+            }
           }
-          setGameStarted(snap.data().gameStarted)
         })
       return () => unsubscribe()
     }
@@ -175,20 +175,7 @@ const LobbyCard = (props) => {
 
     })
 
-    // dispatch(setNrOfPlayers(len + 1))
-
     db.update({ round: 0, rounds: len + 1, players: playerObject })
-
-
-    /**
-     * 
-     * [ 1 , 2, 3, 4 ]
-     * 
-     * 1->2->3->4
-     * 2->-3-4->1
-     * 3->4->1->2
-     * 4->1->2->3
-     */
   }
 
 
@@ -229,6 +216,8 @@ const LobbyCard = (props) => {
     </Card>
   )
 }
+
+
 const JoinCard = (props) => {
   const [joinCode, setJoinCode] = useState('')
   const dispatch = useDispatch()
@@ -275,6 +264,7 @@ const WriteCard = (props) => {
   const history = useHistory();
 
   useEffect(() => {
+
     const unsubscribe = db.onSnapshot((snap) => {
       if (snap.data()) {
 
@@ -306,8 +296,6 @@ const WriteCard = (props) => {
   }
 
   useEffect(() => {
-    console.log("nrOfReady", nrOfReady)
-    console.log("nrOfPlayers", nrOfPlayers)
     if (nrOfReady === nrOfPlayers) {
       if (isHost) {
         const tempPlayers = players
@@ -355,51 +343,73 @@ const DrawCard = (props) => {
   const db = gameCode && firebase.firestore().collection('rooms').doc(`${gameCode}`)
   const [players, setPlayers] = useState([])
   const [word, setWord] = useState("")
-  
+
+  const [text, setText] = useState("")
+
   const [round, setRound] = useState(0)
   const [nrOfReady, setNrOfReady] = useState(0)
   const [nrOfPlayers, setNrOfPlayers] = useState(99)
   const [ready, setReady] = useState(false)
+  const [resetRound, setResetRound] = useState(false)
+  const [drawRound, setDrawRound] = useState()
   const history = useHistory();
- 
 
-/**
- * Have bool DrawRound that is rounds % 2 to get if Draw/write
- * 
- * On each allReady, check if rounds ==== nrOfPlayers
- * 
- * Remove word if !DrawRound
- * ShowTextEdit if Drawround
- * host sets reday status and increments rounds
- */
+
+  /**
+   * Have bool DrawRound that is rounds % 2 to get if Draw/write
+   * 
+   * On each allReady, check if rounds ==== nrOfPlayers
+   * 
+   * Remove word if !DrawRound
+   * ShowTextEdit if Drawround
+   * host sets reday status and increments rounds
+   */
 
   useEffect(() => {
+    if (resetRound === true) {
+      setReady(false)
+    }
+
     const unsubscribe = db.onSnapshot((snap) => {
       if (snap.data()) {
         const tempPlayers = snap.data().players
         const tempRound = snap.data().round
-        setPlayers(tempPlayers)
-        setRound(tempRound)
-        setNrOfReady(Object.values(tempPlayers).filter(elem => elem.ready).length)
-        setNrOfPlayers(Object.values(tempPlayers).length)
-
-        const playerOfWord = tempPlayers[name].order[tempRound]
-        // console.log(tempPlayers)
-        // console.log(tempRound)
-        // console.log(playerOfWord)
-        // console.log(tempPlayers[playerOfWord][tempRound - 1])
-        setWord(tempPlayers[playerOfWord][tempRound - 1])
+        const tempNrOfPlayers = Object.values(tempPlayers).length
+        if (tempRound === tempNrOfPlayers) {
+          history.push('/done')
+        }
+        else {
+          setPlayers(tempPlayers)
+          setRound(tempRound)
+          const tempDrawRound = !!(round % 2 === 0)
+          setNrOfReady(Object.values(tempPlayers).filter(elem => elem.ready).length)
+          setNrOfPlayers(Object.values(tempPlayers).length)
+          const playerOfWord = tempPlayers[name].order[tempRound]
+          setDrawRound(tempDrawRound)
+          if (tempDrawRound) {
+            setWord(tempPlayers[playerOfWord][tempRound - 1])
+            if (!ready) ref.current.clear()
+          }
+          else {
+            ref.current.loadSaveData(tempPlayers[playerOfWord][tempRound - 1], ready)
+          }
+        }
       }
     })
+    setResetRound(false)
     return () => unsubscribe()
-  }, [])
+  }, [resetRound])
 
   const handleDone = (e) => {
     e.preventDefault()
+
+    if (text === "" && !drawRound) {
+      return
+    }
     setReady(true)
     const tempPlayer = players[name]
     tempPlayer.ready = true
-    tempPlayer[round] = ref.current.getSaveData()
+    tempPlayer[round] = drawRound ? ref.current.getSaveData() : text
     var p = "players";
     var update = {};
     update[p + '.' + name] = tempPlayer;
@@ -407,16 +417,14 @@ const DrawCard = (props) => {
   }
 
   useEffect(() => {
-    console.log("nrOfReady", nrOfReady)
-    console.log("nrOfPlayers", nrOfPlayers)
     if (nrOfReady === nrOfPlayers) {
-      console.log(ref.current)
-      console.log(ref.current.getSaveData())
-
       if (isHost) {
         db.update({ round: round + 1 })
+        const tempPlayers = players
+        Object.keys(players).forEach((elem) => tempPlayers[elem].ready = false)
+        db.update({ round: round + 1, players: tempPlayers })
       }
-      history.push("/draw")
+      setResetRound(true)
     }
   }, [nrOfReady])
 
@@ -424,13 +432,14 @@ const DrawCard = (props) => {
     <Container maxWidth="sm" className="container" >
       <CardContent>
         <Typography gutterBottom variant="h5" component="h2" style={{ textAlign: "center" }}>
-          {`Rita ${word}`}
+          {drawRound && `Rita ${word}`}
         </Typography>
 
       </CardContent>
       <CardActions style={{ display: "flex", justifyContent: 'space-around', justifyContent: 'center' }}>
         <CanvasDraw disabled={ready} ref={ref} />
       </CardActions>
+      {!drawRound && <form onSubmit={(e) => handleDone(e)}> <TextField disabled={ready || drawRound} id="standard-basic" label="" value={text} onChange={(e) => { setText(e.target.value) }} /></form>}
       <br></br>
       <CardActions style={{ display: "flex", justifyContent: 'space-around' }}>
         <FormControlLabel
@@ -449,5 +458,30 @@ const DrawCard = (props) => {
     </Container>
   )
 }
+
+const DoneCard = (props) => {
+  const gameCode = useSelector(state => state.game.gameCode)
+  const db = gameCode && firebase.firestore().collection('rooms').doc(`${gameCode}`)
+  const dispatch = useDispatch()
+
+  return (
+    <Container maxWidth="sm" className="container" >
+      <CardContent>
+        <h2>Done</h2>
+      </CardContent>
+      <Link to="/"> <Button size="small" color="primary" onClick={() => {
+        if (db) {
+          db.delete();
+          dispatch(changeCodeName())
+        }
+      }
+      }>Tillbaka</Button></Link>
+      <br></br>
+      <CardActions style={{ display: "flex", justifyContent: 'space-around' }}>
+      </CardActions>
+    </Container>
+  )
+}
+
 
 export default App;

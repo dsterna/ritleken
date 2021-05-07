@@ -26,6 +26,12 @@ export const changeName = (str) => {
         payload: str
     }
 }
+export const changeCodeName = () => {
+    console.log("Hej dag")
+    return {
+        type: 'NAMECODECHANGER'
+    }
+}
 export const setNrOfPlayers = (int) => {
     return {
         type: 'SETNUMBEROFPLAYERS',
