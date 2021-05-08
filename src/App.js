@@ -12,6 +12,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { changeCodeName, changeGameCode, changeName, isHost } from './actions'
 import { useDispatch, useSelector } from 'react-redux'
 
+import Alert from '@material-ui/lab/Alert';
 import Button from '@material-ui/core/Button';
 import CanvasDraw from "react-canvas-draw";
 import Card from '@material-ui/core/Card';
@@ -21,7 +22,8 @@ import CardMedia from '@material-ui/core/CardMedia';
 import Checkbox from '@material-ui/core/Checkbox';
 import Container from '@material-ui/core/Container';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
-import { RouterRounded } from '@material-ui/icons';
+// import { RouterRounded } from '@material-ui/icons';
+import Snackbar from '@material-ui/core/Snackbar';
 import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import firebase from './config'
@@ -134,12 +136,11 @@ const LobbyCard = (props) => {
       .doc(`${gameCode}`)
       .onSnapshot((snap) => {
         if (location.pathname === "/lobby") {
-          if (snap) {
-            if (snap.data()) {
-              setPlayers(Object.values(snap.data().players))
-              setPlayerObj(snap.data().players)
-              setGameStarted(snap.data().gameStarted)
-            }
+          if (snap?.data()) {
+            console.log(snap?.data())
+            setPlayers(Object.values(snap.data().players))
+            setPlayerObj(snap.data().players)
+            setGameStarted(snap.data().gameStarted)
           }
         }
       })
@@ -217,30 +218,55 @@ const LobbyCard = (props) => {
 
 const JoinCard = (props) => {
   const [joinCode, setJoinCode] = useState('')
+  const db = firebase.firestore().collection('rooms')
   const dispatch = useDispatch()
+  const history = useHistory();
+  const [error, setError] = useState(false)
+  const joinGame = (params) => {
+    if (joinCode === "")
+      return
+
+    db.doc(joinCode).get().then(
+      doc => {
+        if (doc.exists) {
+          dispatch(changeGameCode(joinCode))
+          history.push("/lobby")
+        }
+        else {
+          setError(true)
+        }
+      }
+    )
+  }
+
+
+
+
   return (
     <Card className="card-class" style={{ padding: "1rem" }}>
       <CardContent>
         <Typography variant="h5" component="h2">
           Joina spel
         </Typography>
-
       </CardContent>
-      <CardActions >
-        <TextField value={joinCode} id="outlined-basic" label="Anslutningskod" variant="outlined" onChange={(e) => setJoinCode(e.target.value)} />
-      </CardActions>
-
-      <CardActions style={{ display: "flex", justifyContent: 'space-around' }}>
-        <Link to="/"><Button size="small" color="primary" onClick={() => {
-        }}>Avbryt </Button></Link>
-        <Link to="/lobby"><Button size="small" color="primary" onClick={() => {
-          // todo: kör en find och kolla om spelet finns, om nej, redirecta inte 
-          dispatch(changeGameCode(joinCode))
-        }
-        }>Hitta spel </Button></Link>
-
-      </CardActions>
-    </Card>
+      <form onSubmit={e => {
+        e.preventDefault();
+        joinGame()
+      }}>
+        <CardActions >
+          <TextField value={joinCode} id="outlined-basic" label="Anslutningskod" variant="outlined" onChange={(e) => setJoinCode(e.target.value)} />
+        </CardActions>
+        <CardActions style={{ display: "flex", justifyContent: 'space-around' }}>
+          <Link to="/"><Button size="small" color="primary" onClick={() => {
+          }}>Avbryt </Button></Link>
+          <Button size="small" color="primary" type="submit" >
+            Hitta spel </Button>
+          <Snackbar open={error} autoHideDuration={6000} onClose={() => { setError(false) }}>
+            <Alert severity="error">Hittade ingets spel</Alert>
+          </Snackbar>
+        </CardActions>
+      </form>
+    </Card >
   )
 }
 
