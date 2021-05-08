@@ -13,6 +13,7 @@ import { changeCodeName, changeGameCode, changeName, isHost } from './actions'
 import { useDispatch, useSelector } from 'react-redux'
 
 import Alert from '@material-ui/lab/Alert';
+import AppBar from '@material-ui/core/AppBar';
 import Button from '@material-ui/core/Button';
 import CanvasDraw from "react-canvas-draw";
 import Card from '@material-ui/core/Card';
@@ -24,6 +25,8 @@ import Container from '@material-ui/core/Container';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 // import { RouterRounded } from '@material-ui/icons';
 import Snackbar from '@material-ui/core/Snackbar';
+import Tab from '@material-ui/core/Tab';
+import Tabs from '@material-ui/core/Tabs';
 import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import firebase from './config'
@@ -137,10 +140,13 @@ const LobbyCard = (props) => {
       .onSnapshot((snap) => {
         if (location.pathname === "/lobby") {
           if (snap?.data()) {
-            console.log(snap?.data())
-            setPlayers(Object.values(snap.data().players))
-            setPlayerObj(snap.data().players)
-            setGameStarted(snap.data().gameStarted)
+            if (Object.keys(snap.data()).length) {
+
+              console.log(snap?.data())
+              setPlayers(Object.values(snap.data().players))
+              setPlayerObj(snap.data().players)
+              setGameStarted(snap.data().gameStarted)
+            }
           }
         }
       })
@@ -378,8 +384,6 @@ const DrawCard = () => {
   const history = useHistory();
   const location = useLocation()
 
-
-
   /**
    * Have bool DrawRound that is rounds % 2 to get if Draw/write
    * 
@@ -393,6 +397,7 @@ const DrawCard = () => {
   useEffect(() => {
     if (resetRound === true) {
       setReady(false)
+      setNrOfReady(0)
     }
     const unsubscribe = db.onSnapshot((snap) => {
       if (location.pathname === "/draw") {
@@ -498,11 +503,15 @@ const DoneCard = (props) => {
   const gameCode = useSelector(state => state.game.gameCode)
   const name = useSelector(state => state.name.code)
 
-  const db = gameCode && firebase.firestore().collection('rooms').doc(`${gameCode}`)
+  const [currentName, setCurrentName] = useState(name)
+  const db = firebase.firestore().collection('rooms').doc(`${gameCode}`)
   const [players, setPlayers] = useState()
   const dispatch = useDispatch()
-
+  const history = useHistory()
   useEffect(() => {
+    if (!db) {
+      history.push('/')
+    }
     db.get().then(
       doc => {
         if (doc.exists) {
@@ -512,12 +521,24 @@ const DoneCard = (props) => {
     )
   }, [])
 
+  // const handleChange = (e) => {
+  //   setCurrentName(e.target.value)
+  // }
+console.log(players)
   return (
-    <Container maxWidth="sm" className="container" >
+    <Container maxWidth="sm" className="container" style={{marginTop: "3rem", marginBottom: "3rem"}}>
       <CardContent>
-        {players && <h2 style={{ textAlign: 'center' }}>{players[name].userName}</h2>}
+        <div>
+          {players && <AppBar position="static">
+            {/* <Tabs value={currentName} onChange={handleChange} aria-label="simple tabs example">
+              {Object.keys(players).map((elem, index) =><Tab label={players[elem].userName} value={players[elem]}/> )}
+              
+            </Tabs> */}
+          </AppBar>}
+          {players && <h2 style={{ textAlign: 'center' }}>{currentName}</h2>}
+        </div>
       </CardContent>
-      {players && Object.keys(players).map((elem, index) => <div>{index % 2 === 0 ? <h2 style={{ textAlign: "center" }}>{players[elem][index]}</h2> : <div style={{ display: "flex", justifyContent: 'space-around', justifyContent: 'center' }}> <CanvasDraw disabled={true} saveData={players[elem][index]} /></div>}</div>)
+      {players && Object.keys(players).map((elem, index) => <div>{index % 2 === 0 ? <h2 style={{ textAlign: "center" }}>{players[currentName][index]}</h2> : <div style={{ display: "flex", justifyContent: 'space-around', justifyContent: 'center' }}> <CanvasDraw disabled={true} saveData={players[currentName][index]} /></div>}</div>)
       }
       <CardActions style={{ display: "flex", justifyContent: 'space-around' }}>
         <Link to="/"> <Button size="small" color="primary" onClick={() => {
