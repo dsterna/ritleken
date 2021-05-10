@@ -22,17 +22,20 @@ import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
 import CardMedia from '@material-ui/core/CardMedia';
 import Checkbox from '@material-ui/core/Checkbox';
+import ColorLensOutlinedIcon from '@material-ui/icons/ColorLensOutlined';
 import Container from '@material-ui/core/Container';
 import DeleteIcon from '@material-ui/icons/Delete';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
+import HdrStrongOutlinedIcon from '@material-ui/icons/HdrStrongOutlined';
 import IconButton from '@material-ui/core/IconButton';
+import LineWeightOutlinedIcon from '@material-ui/icons/LineWeightOutlined';
+import ReplayOutlined from '@material-ui/icons/ReplayOutlined';
 import Snackbar from '@material-ui/core/Snackbar';
 import Tab from '@material-ui/core/Tab';
 import Tabs from '@material-ui/core/Tabs';
 import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import firebase from './config'
-import { makeStyles } from '@material-ui/core/styles';
 import temp2 from './assets/img/temp2.jpg'
 
 function App() {
@@ -90,19 +93,18 @@ const TempDraw = () => {
         <form onSubmit={() => { }} autoComplete="off"> <TextField disabled={ready} id="standard-basic" label="" value={text} /></form>
       </CardActions>
       }
-      <div style={{ display: "flex", justifyContent: 'space-between',padding: "1rem"}}>
-
-        <IconButton aria-label="delete">
-          <DeleteIcon />
+      <div style={{ display: "flex", justifyContent: 'space-around' }}>
+        <IconButton aria-label="delete" onClick={() => ref.current.undo()}>
+          <ReplayOutlined />
         </IconButton>
-        <IconButton aria-label="delete" disabled color="primary">
-          <DeleteIcon />
+        <IconButton aria-label="delete" disabled color="primary" >
+          <HdrStrongOutlinedIcon />
         </IconButton>
         <IconButton color="secondary" aria-label="add an alarm">
-          <AlarmIcon />
+          <LineWeightOutlinedIcon />
         </IconButton>
         <IconButton color="primary" aria-label="add to shopping cart">
-          <AddShoppingCartIcon />
+          <ColorLensOutlinedIcon />
         </IconButton>
       </div>
       <CardActions style={{ display: "flex", justifyContent: 'space-around' }}>
@@ -407,7 +409,7 @@ const WriteCard = (props) => {
           Skriv ditt ord:
         </Typography>
       </CardContent>
-      <CardActions style={{ display: "flex", justifyContent: 'space-around', justifyContent: 'center' }}>
+      <CardActions style={{ display: "flex", justifyContent: 'center' }}>
         <form onSubmit={(e) => handleDone(e)} autoComplete="off"> <TextField disabled={ready} id="standard-basic" label="" value={text} onChange={(e) => { setText(e.target.value) }} /></form>
         <br />
       </CardActions>
@@ -528,14 +530,27 @@ const DrawCard = () => {
         </Typography>
 
       </CardContent>
-      <CardActions style={{ display: "flex", justifyContent: 'space-around', justifyContent: 'center' }}>
+      <CardActions style={{ display: "flex", justifyContent: 'center' }}>
         <CanvasDraw disabled={ready || !drawRound} ref={ref} />
       </CardActions>
-      {!drawRound && <CardActions style={{ display: "flex", justifyContent: 'space-around', justifyContent: 'center' }}>
+      {!drawRound && <CardActions style={{ display: "flex", justifyContent: 'center' }}>
         <form onSubmit={(e) => handleDone(e)} autoComplete="off"> <TextField disabled={ready} id="standard-basic" label="" value={text} onChange={(e) => { setText(e.target.value) }} /></form>
       </CardActions>
       }
-      <br></br>
+      <div style={{ display: "flex", justifyContent: 'space-around' }}>
+        <IconButton aria-label="delete" onClick={() => ref.current.undo()}>
+          <ReplayOutlined />
+        </IconButton>
+        <IconButton aria-label="delete" disabled color="primary" >
+          <HdrStrongOutlinedIcon />
+        </IconButton>
+        <IconButton color="secondary" aria-label="add an alarm">
+          <LineWeightOutlinedIcon />
+        </IconButton>
+        <IconButton color="primary" aria-label="add to shopping cart">
+          <ColorLensOutlinedIcon />
+        </IconButton>
+      </div>
       <CardActions style={{ display: "flex", justifyContent: 'space-around' }}>
         <FormControlLabel
           control={
@@ -600,7 +615,7 @@ const DoneCard = (props) => {
   return (
     <Container maxWidth="sm" className="container" style={{ marginTop: "3rem", marginBottom: "3rem", }}>
       <CardContent>
-        {players && <div style={{ display: "flex", justifyContent: 'space-around', justifyContent: 'center' }} >
+        {players && <div style={{ display: "flex", justifyContent: 'center' }} >
           <Tabs
             onChange={handleChange}
             value={currentName}
@@ -616,9 +631,10 @@ const DoneCard = (props) => {
         orders && orders.map((elem, index) =>
           <div key={index}>{index % 2 === 0
             ?
+            // change to typography
             <h2 style={{ textAlign: "center", fontFamily: 'Roboto' }}>{players[elem.key][index]}</h2>
             :
-            <div style={{ display: "flex", justifyContent: 'space-around', justifyContent: 'center' }}>
+            <div style={{ display: "flex", justifyContent: 'center' }}>
               <CanvasDraw disabled={true} saveData={players[elem.key][index]} hideInterface={true} style={{ touchAction: "pan-y" }} />
 
             </div>}
