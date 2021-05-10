@@ -12,6 +12,8 @@ import React, { useEffect, useRef, useState } from 'react'
 import { changeCodeName, changeGameCode, changeName, isHost } from './actions'
 import { useDispatch, useSelector } from 'react-redux'
 
+import AddShoppingCartIcon from '@material-ui/icons/AddShoppingCart';
+import AlarmIcon from '@material-ui/icons/Alarm';
 import Alert from '@material-ui/lab/Alert';
 import Button from '@material-ui/core/Button';
 import CanvasDraw from "react-canvas-draw";
@@ -21,14 +23,16 @@ import CardContent from '@material-ui/core/CardContent';
 import CardMedia from '@material-ui/core/CardMedia';
 import Checkbox from '@material-ui/core/Checkbox';
 import Container from '@material-ui/core/Container';
+import DeleteIcon from '@material-ui/icons/Delete';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
+import IconButton from '@material-ui/core/IconButton';
 import Snackbar from '@material-ui/core/Snackbar';
 import Tab from '@material-ui/core/Tab';
 import Tabs from '@material-ui/core/Tabs';
 import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import firebase from './config'
-import temp from './assets/img/temp.jpg'
+import { makeStyles } from '@material-ui/core/styles';
 import temp2 from './assets/img/temp2.jpg'
 
 function App() {
@@ -52,6 +56,9 @@ function App() {
             <Route exact path="/done">
               <DoneCard />
             </Route>
+            <Route exact path="/TempDraw">
+              <TempDraw />
+            </Route>
             <Route path="/">
               <StartCard />
             </Route>
@@ -60,8 +67,60 @@ function App() {
       </Router>
     </div>
   );
+}
 
 
+const TempDraw = () => {
+  const ref = useRef()
+  const word = "blä"
+  const ready = false
+  const drawRound = true
+  const text = ""
+  return (
+    <Container maxWidth="sm" className="container" >
+      <CardContent>
+        <Typography gutterBottom variant="h5" component="h2" style={{ textAlign: "center" }}>
+          {drawRound && `Rita ${word}`}
+        </Typography>
+      </CardContent>
+      <CardActions style={{ display: "flex", justifyContent: 'space-around', justifyContent: 'center' }}>
+        <CanvasDraw disabled={ready || !drawRound} ref={ref} />
+      </CardActions>
+      {!drawRound && <CardActions style={{ display: "flex", justifyContent: 'space-around', justifyContent: 'center' }}>
+        <form onSubmit={() => { }} autoComplete="off"> <TextField disabled={ready} id="standard-basic" label="" value={text} /></form>
+      </CardActions>
+      }
+      <div style={{ display: "flex", justifyContent: 'space-between',padding: "1rem"}}>
+
+        <IconButton aria-label="delete">
+          <DeleteIcon />
+        </IconButton>
+        <IconButton aria-label="delete" disabled color="primary">
+          <DeleteIcon />
+        </IconButton>
+        <IconButton color="secondary" aria-label="add an alarm">
+          <AlarmIcon />
+        </IconButton>
+        <IconButton color="primary" aria-label="add to shopping cart">
+          <AddShoppingCartIcon />
+        </IconButton>
+      </div>
+      <CardActions style={{ display: "flex", justifyContent: 'space-around' }}>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={ready}
+
+              name="checkedB"
+              color="primary"
+              disabled={ready}
+            />
+          }
+          label={`Redo (${1})`}
+        />
+      </CardActions>
+    </Container>
+  )
 }
 
 
