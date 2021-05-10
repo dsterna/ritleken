@@ -171,15 +171,19 @@ const LobbyCard = (props) => {
   }, [customName]);
 
   const setUpGameQueue = () => {
-
     let len = players.length - 1
     let playerObject = playerObj
+    console.log(playerObject)
+    players.forEach((element, i) => {
+      let ary = [...players].reverse()
+      for (let ii = 0; ii < i+1; ii++) {
+          ary.unshift(ary.pop());
+      }
+      playerObject[element.code].order = ary.map(elem => elem.code)
+      playerObject[element.code].ready = false
 
-    players.forEach((elem, i) => {
-      playerObject[elem.code].order = players.map((_, ii) => players[(i + ii > len ? ii + i - len - 1 : i + ii)].code)
-      playerObject[elem.code].ready = false
-
-    })
+    });
+    console.log(playerObject)
     db.update({ round: 0, rounds: len + 1, players: playerObject })
   }
 
@@ -414,7 +418,7 @@ const DrawCard = () => {
             const tempDrawRound = !!(round % 2 === 0)
             setNrOfReady(Object.values(tempPlayers).filter(elem => elem.ready).length)
             setNrOfPlayers(Object.values(tempPlayers).length)
-            const playerOfWord = tempPlayers[name].order[tempRound]
+            const playerOfWord = tempPlayers[name].order[1]
             setDrawRound(tempDrawRound)
             setWord(tempPlayers[playerOfWord][tempRound - 1])
           }
@@ -431,7 +435,7 @@ const DrawCard = () => {
         ref.current.clear()
       }
       else {
-        const playerOfWord = players[name].order[round]
+        const playerOfWord = players[name].order[1]
         ref.current.loadSaveData(players[playerOfWord][round - 1], true)
       }
     }
@@ -464,12 +468,14 @@ const DrawCard = () => {
       setResetRound(true)
     }
   }, [nrOfReady])
-
+  console.log(players)
   return (
     <Container maxWidth="sm" className="container" >
       <CardContent>
         <Typography gutterBottom variant="h5" component="h2" style={{ textAlign: "center" }}>
+          {players && <h2 style={{ textAlign: 'center' }}>{players[name]?.userName}</h2>}
           {drawRound && `Rita ${word}`}
+
         </Typography>
 
       </CardContent>
@@ -500,12 +506,15 @@ const DrawCard = () => {
 }
 
 const DoneCard = (props) => {
+  // const gameCode = 6843
+  // const name = 6843
   const gameCode = useSelector(state => state.game.gameCode)
   const name = useSelector(state => state.name.code)
 
   const [currentName, setCurrentName] = useState(name)
   const db = firebase.firestore().collection('rooms').doc(`${gameCode}`)
   const [players, setPlayers] = useState()
+  const [orders, setOrders] = useState()
   const dispatch = useDispatch()
   const history = useHistory()
   useEffect(() => {
@@ -515,7 +524,14 @@ const DoneCard = (props) => {
     db.get().then(
       doc => {
         if (doc.exists) {
-          setPlayers(doc.data().players);
+          const tempPlayers = doc.data().players
+          setPlayers(tempPlayers);
+          const ary = Object.entries(tempPlayers).map(([key, val]) => { return { key: key, val: val.order.indexOf(name) } }).sort((a, b) => a.val > b.val ? 1 : ((b.val > a.val) ? -1 : 0))
+          setOrders(ary)
+          console.log(ary)
+
+
+
         }
       }
     )
@@ -524,9 +540,9 @@ const DoneCard = (props) => {
   // const handleChange = (e) => {
   //   setCurrentName(e.target.value)
   // }
-console.log(players)
+  console.log(players)
   return (
-    <Container maxWidth="sm" className="container" style={{marginTop: "3rem", marginBottom: "3rem"}}>
+    <Container maxWidth="sm" className="container" style={{ marginTop: "3rem", marginBottom: "3rem" }}>
       <CardContent>
         <div>
           {players && <AppBar position="static">
@@ -535,10 +551,20 @@ console.log(players)
               
             </Tabs> */}
           </AppBar>}
-          {players && <h2 style={{ textAlign: 'center' }}>{currentName}</h2>}
+          {players && <h2 style={{ textAlign: 'center' }}>{players[currentName].userName}</h2>}
         </div>
       </CardContent>
-      {players && Object.keys(players).map((elem, index) => <div>{index % 2 === 0 ? <h2 style={{ textAlign: "center" }}>{players[currentName][index]}</h2> : <div style={{ display: "flex", justifyContent: 'space-around', justifyContent: 'center' }}> <CanvasDraw disabled={true} saveData={players[currentName][index]} /></div>}</div>)
+      {orders && orders.map((elem, index) =>
+        <div>{index % 2 === 0
+          ?
+          <h2 style={{ textAlign: "center" }}>{players[elem.key][index]}</h2>
+          :
+          <div style={{ display: "flex", justifyContent: 'space-around', justifyContent: 'center' }}>
+            {/* <CanvasDraw disabled={true} saveData={players[players[currentName].order[index]][index]} hideInterface={true} /> */}
+            <CanvasDraw disabled={true} saveData={players[elem.key][index]} hideInterface={true} />
+
+          </div>}
+        </div>)
       }
       <CardActions style={{ display: "flex", justifyContent: 'space-around' }}>
         <Link to="/"> <Button size="small" color="primary" onClick={() => {

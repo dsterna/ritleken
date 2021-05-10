@@ -1,16 +1,4 @@
-const hej = (params) => {
-    let len = params.length - 1
-    const hej = params.map((elem, i) =>
-        params.map((_, ii) => i + ii > len ? ii + i - len - 1 : i + ii)
-    )
 
-    let round = 0
-
-    hej.forEach(element => {
-        console.log(element)
-    });
-
-}
 //     console.log('-------------------------')
 //     console.log("round: ", round)
 //     obj2.forEach(element => {
@@ -43,26 +31,51 @@ const hej = (params) => {
 //     })
 // }
 
-// hej(
-//     [
-//         {
-//             "userName": "spelare-1119",
-//             "isHost": false,
-//             "code": 1119,
-//             "index": 0
-//         },
-//         {
-//             "code": 2981,
-//             "isHost": false,
-//             "userName": "spelare-2981",
-//             "index": 1
-//         },
-//         {
-//             "userName": "spelare-8042",
-//             "code": 8042,
-//             "isHost": false,
-//             "index": 2
-//         },
+
+const hej = (params) => {
+    let len = params.length - 1
+    let hej = params.sort((a, b) => (a.code > b.code) ? 1 : -1)
+    hej.forEach((element, i) => {
+        let ary = [...hej].reverse()
+        for (let ii = 0; ii < i+1; ii++) {
+            ary.unshift(ary.pop());
+        }
+        element.order = ary.map(elem => elem.code)
+        element.ready = false
+    });
+    console.log(hej)
+
+}
+
+hej(
+    [
+        {
+            "userName": "spelare-1",
+            "code": 1,
+        },
+        {
+            "userName": "spelare-3",
+            "code": 3,
+        },
+        {
+            "code": 2,
+            "userName": "spelare-2",
+        },
+
+        {
+            "userName": "spelare-4",
+            "code": 4,
+
+        },
+        {
+            "code": 5,
+            "userName": "spelare-5",
+        },
+
+    ])
+
+
+
 //         // {
 //         //     "isHost": true,
 //         //     "userName": "spelare-8308",
@@ -81,9 +94,8 @@ const hej = (params) => {
 
 
 
+// const hej2 = (params) => {
+//     Object.keys(params).forEach((elem) => params[elem].hej = true)
+// }
 
-const hej2 = (params) => {
-    Object.keys(params).forEach((elem) => params[elem].hej = true)    
-}
-
-hej2({ one: { hej: false }, two: { hej: false } })
+// hej2({ one: { hej: false }, two: { hej: false } })
