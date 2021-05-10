@@ -13,7 +13,6 @@ import { changeCodeName, changeGameCode, changeName, isHost } from './actions'
 import { useDispatch, useSelector } from 'react-redux'
 
 import Alert from '@material-ui/lab/Alert';
-import AppBar from '@material-ui/core/AppBar';
 import Button from '@material-ui/core/Button';
 import CanvasDraw from "react-canvas-draw";
 import Card from '@material-ui/core/Card';
@@ -23,20 +22,14 @@ import CardMedia from '@material-ui/core/CardMedia';
 import Checkbox from '@material-ui/core/Checkbox';
 import Container from '@material-ui/core/Container';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
-// import { RouterRounded } from '@material-ui/icons';
 import Snackbar from '@material-ui/core/Snackbar';
 import Tab from '@material-ui/core/Tab';
 import Tabs from '@material-ui/core/Tabs';
 import TextField from '@material-ui/core/TextField';
-import Timeline from '@material-ui/lab/Timeline';
-import TimelineConnector from '@material-ui/lab/TimelineConnector';
-import TimelineContent from '@material-ui/lab/TimelineContent';
-import TimelineDot from '@material-ui/lab/TimelineDot';
-import TimelineItem from '@material-ui/lab/TimelineItem';
-import TimelineSeparator from '@material-ui/lab/TimelineSeparator';
 import Typography from '@material-ui/core/Typography';
 import firebase from './config'
 import temp from './assets/img/temp.jpg'
+import temp2 from './assets/img/temp2.jpg'
 
 function App() {
   return (
@@ -81,8 +74,8 @@ const StartCard = (props) => {
       <CardMedia
         component="img"
         alt="Contemplative Reptile"
-        height="140"
-        image={temp}
+        height="300"
+        image={temp2}
         title="tmep"
       />
       <CardContent>
@@ -95,10 +88,8 @@ const StartCard = (props) => {
       </CardContent>
 
       <CardActions style={{ display: "flex", justifyContent: 'space-around' }}>
-
         <Link to="/join"><Button size="small" color="primary" onClick={() => {
           dispatch(isHost(false))
-
         }}>Joina spel  </Button></Link>
         <Link to="/lobby"> <Button size="small" color="primary" onClick={() => {
           dispatch(isHost(true))
@@ -125,38 +116,48 @@ const LobbyCard = (props) => {
 
 
   const db = gameCode && firebase.firestore().collection('rooms').doc(`${gameCode}`)
-
-
   useEffect(() => {
-    if (isHost) {
-      db.set({})
+
+    if (db) {
+      if (isHost) {
+        db.set({})
+      }
+      db.update({
+        [`players.${name.code}`]: { ...name, isHost: isHost },
+        gameStarted: false
+      })
     }
-    db.update({
-      [`players.${name.code}`]: { ...name, isHost: isHost },
-      gameStarted: false
-    })
+    else {
+      history.push('/')
+    }
+
+
   }, [])
 
 
   useEffect(() => {
-    const unsubscribe = firebase
-      .firestore()
-      .collection('rooms')
-      .doc(`${gameCode}`)
-      .onSnapshot((snap) => {
-        if (location.pathname === "/lobby") {
-          if (snap?.data()) {
-            if (Object.keys(snap.data()).length) {
+    if (db) {
+
+      const unsubscribe = firebase
+        .firestore()
+        .collection('rooms')
+        .doc(`${gameCode}`)
+        .onSnapshot((snap) => {
+          if (location.pathname === "/lobby") {
+            if (snap?.data()) {
+              if (Object.keys(snap.data()).length) {
 
 
-              setPlayers(Object.values(snap.data().players))
-              setPlayerObj(snap.data().players)
-              setGameStarted(snap.data().gameStarted)
+                setPlayers(Object.values(snap.data().players))
+                setPlayerObj(snap.data().players)
+                setGameStarted(snap.data().gameStarted)
+              }
             }
           }
-        }
-      })
-    return () => unsubscribe()
+        })
+      return () => unsubscribe()
+    }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -205,14 +206,12 @@ const LobbyCard = (props) => {
         <Typography variant="h5" component="h2">
           Lobby {gameCode}
         </Typography>
-        <h3>{!gameStarted ? "Väntar" : "Startad"}</h3>
         <ul>
           {players.map((elem) => <li key={elem.code}>{elem.userName}</li>)}
         </ul>
       </CardContent>
       <CardActions >
       </CardActions>
-
       <TextField value={customName} id="outlined-basic" label="Namn" variant="outlined" onChange={(e) => {
         setCustomName(e.target.value)
       }} />
@@ -497,10 +496,10 @@ const DrawCard = () => {
 }
 
 const DoneCard = (props) => {
-  const gameCode = 3451
-  const name = 3451
-  // const gameCode = useSelector(state => state.game.gameCode)
-  // const name = useSelector(state => state.name.code)
+  // const gameCode = 3451
+  // const name = 3451
+  const gameCode = useSelector(state => state.game.gameCode)
+  const name = useSelector(state => state.name.code)
 
   const [currentName, setCurrentName] = useState(name)
   const db = firebase.firestore().collection('rooms').doc(`${gameCode}`)
@@ -550,16 +549,13 @@ const DoneCard = (props) => {
             textColor="primary"
 
           >
-            {Object.keys(players).map((elem, index) => <Tab label={players[elem].userName} value={players[elem].code} {...a11yProps(index)} />)}
-
-
+            {Object.keys(players).map((elem, index) => <Tab key={index} label={players[elem].userName} value={players[elem].code} {...a11yProps(index)} />)}
           </Tabs>
-
         </div>}
       </CardContent>
       {
         orders && orders.map((elem, index) =>
-          <div>{index % 2 === 0
+          <div key={index}>{index % 2 === 0
             ?
             <h2 style={{ textAlign: "center", fontFamily: 'Roboto' }}>{players[elem.key][index]}</h2>
             :
