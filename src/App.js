@@ -532,35 +532,42 @@ const DoneCard = (props) => {
   const handleChange = (e, newValue) => {
     setCurrentName(newValue)
   }
+  function a11yProps(index) {
+    return {
+      id: `scrollable-auto-tab-${index}`,
+      'aria-controls': `scrollable-auto-tabpanel-${index}`,
+    };
+  }
 
   return (
     <Container maxWidth="sm" className="container" style={{ marginTop: "3rem", marginBottom: "3rem", }}>
       <CardContent>
-        <div>
+        {players && <div style={{ display: "flex", justifyContent: 'space-around', justifyContent: 'center' }} >
           <Tabs
             onChange={handleChange}
             value={currentName}
             indicatorColor="primary"
             textColor="primary"
-            centered
+
           >
-            {Object.keys(players).map(elem => <Tab label={players[elem].userName} value={players[elem].code} />)}
+            {Object.keys(players).map((elem, index) => <Tab label={players[elem].userName} value={players[elem].code} {...a11yProps(index)} />)}
 
 
           </Tabs>
-          {players && <h2 style={{ textAlign: 'center', fontFamily: 'Roboto' }}>{players[currentName].code}</h2>}
-        </div>
-      </CardContent>
-      {orders && orders.map((elem, index) =>
-        <div>{index % 2 === 0
-          ?
-          <h2 style={{ textAlign: "center", fontFamily: 'Roboto' }}>{players[elem.key][index]}</h2>
-          :
-          <div style={{ display: "flex", justifyContent: 'space-around', justifyContent: 'center' }}>
-            <CanvasDraw disabled={true} saveData={players[elem.key][index]} hideInterface={true} />
 
-          </div>}
-        </div>)
+        </div>}
+      </CardContent>
+      {
+        orders && orders.map((elem, index) =>
+          <div>{index % 2 === 0
+            ?
+            <h2 style={{ textAlign: "center", fontFamily: 'Roboto' }}>{players[elem.key][index]}</h2>
+            :
+            <div style={{ display: "flex", justifyContent: 'space-around', justifyContent: 'center' }}>
+              <CanvasDraw disabled={true} saveData={players[elem.key][index]} hideInterface={true} style={{ touchAction: "pan-y" }} />
+
+            </div>}
+          </div>)
       }
       <CardActions style={{ display: "flex", justifyContent: 'space-around' }}>
         <Link to="/"> <Button size="small" color="primary" onClick={() => {
