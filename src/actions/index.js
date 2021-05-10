@@ -27,7 +27,6 @@ export const changeName = (str) => {
     }
 }
 export const changeCodeName = () => {
-    console.log("Hej dag")
     return {
         type: 'NAMECODECHANGER'
     }

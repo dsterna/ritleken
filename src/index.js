@@ -1,5 +1,5 @@
 import './index.css';
-import 'fontsource-roboto';
+import '@fontsource/roboto';
 
 import App from './App';
 import { Provider } from 'react-redux'

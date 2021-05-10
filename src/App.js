@@ -28,6 +28,12 @@ import Snackbar from '@material-ui/core/Snackbar';
 import Tab from '@material-ui/core/Tab';
 import Tabs from '@material-ui/core/Tabs';
 import TextField from '@material-ui/core/TextField';
+import Timeline from '@material-ui/lab/Timeline';
+import TimelineConnector from '@material-ui/lab/TimelineConnector';
+import TimelineContent from '@material-ui/lab/TimelineContent';
+import TimelineDot from '@material-ui/lab/TimelineDot';
+import TimelineItem from '@material-ui/lab/TimelineItem';
+import TimelineSeparator from '@material-ui/lab/TimelineSeparator';
 import Typography from '@material-ui/core/Typography';
 import firebase from './config'
 import temp from './assets/img/temp.jpg'
@@ -142,7 +148,7 @@ const LobbyCard = (props) => {
           if (snap?.data()) {
             if (Object.keys(snap.data()).length) {
 
-              console.log(snap?.data())
+
               setPlayers(Object.values(snap.data().players))
               setPlayerObj(snap.data().players)
               setGameStarted(snap.data().gameStarted)
@@ -173,17 +179,15 @@ const LobbyCard = (props) => {
   const setUpGameQueue = () => {
     let len = players.length - 1
     let playerObject = playerObj
-    console.log(playerObject)
     players.forEach((element, i) => {
       let ary = [...players].reverse()
-      for (let ii = 0; ii < i+1; ii++) {
-          ary.unshift(ary.pop());
+      for (let ii = 0; ii < i + 1; ii++) {
+        ary.unshift(ary.pop());
       }
       playerObject[element.code].order = ary.map(elem => elem.code)
       playerObject[element.code].ready = false
 
     });
-    console.log(playerObject)
     db.update({ round: 0, rounds: len + 1, players: playerObject })
   }
 
@@ -248,9 +252,6 @@ const JoinCard = (props) => {
       }
     )
   }
-
-
-
 
   return (
     <Card className="card-class" style={{ padding: "1rem" }}>
@@ -349,7 +350,7 @@ const WriteCard = (props) => {
         </Typography>
       </CardContent>
       <CardActions style={{ display: "flex", justifyContent: 'space-around', justifyContent: 'center' }}>
-        <form onSubmit={(e) => handleDone(e)}> <TextField disabled={ready} id="standard-basic" label="" value={text} onChange={(e) => { setText(e.target.value) }} /></form>
+        <form onSubmit={(e) => handleDone(e)} autoComplete="off"> <TextField disabled={ready} id="standard-basic" label="" value={text} onChange={(e) => { setText(e.target.value) }} /></form>
         <br />
       </CardActions>
       <CardActions style={{ display: "flex", justifyContent: 'space-around' }}>
@@ -388,20 +389,13 @@ const DrawCard = () => {
   const history = useHistory();
   const location = useLocation()
 
-  /**
-   * Have bool DrawRound that is rounds % 2 to get if Draw/write
-   * 
-   * On each allReady, check if rounds ==== nrOfPlayers
-   * 
-   * Remove word if !DrawRound
-   * ShowTextEdit if Drawround
-   * host sets reday status and increments rounds
-   */
-
   useEffect(() => {
     if (resetRound === true) {
       setReady(false)
       setNrOfReady(0)
+      setText("")
+
+
     }
     const unsubscribe = db.onSnapshot((snap) => {
       if (location.pathname === "/draw") {
@@ -468,22 +462,19 @@ const DrawCard = () => {
       setResetRound(true)
     }
   }, [nrOfReady])
-  console.log(players)
   return (
     <Container maxWidth="sm" className="container" >
       <CardContent>
         <Typography gutterBottom variant="h5" component="h2" style={{ textAlign: "center" }}>
-          {players && <h2 style={{ textAlign: 'center' }}>{players[name]?.userName}</h2>}
           {drawRound && `Rita ${word}`}
-
         </Typography>
 
       </CardContent>
       <CardActions style={{ display: "flex", justifyContent: 'space-around', justifyContent: 'center' }}>
-        <CanvasDraw disabled={ready} ref={ref} />
+        <CanvasDraw disabled={ready || !drawRound} ref={ref} />
       </CardActions>
       {!drawRound && <CardActions style={{ display: "flex", justifyContent: 'space-around', justifyContent: 'center' }}>
-        <form onSubmit={(e) => handleDone(e)}> <TextField disabled={ready || drawRound} id="standard-basic" label="" value={text} onChange={(e) => { setText(e.target.value) }} /></form>
+        <form onSubmit={(e) => handleDone(e)} autoComplete="off"> <TextField disabled={ready} id="standard-basic" label="" value={text} onChange={(e) => { setText(e.target.value) }} /></form>
       </CardActions>
       }
       <br></br>
@@ -506,10 +497,10 @@ const DrawCard = () => {
 }
 
 const DoneCard = (props) => {
-  // const gameCode = 6843
-  // const name = 6843
-  const gameCode = useSelector(state => state.game.gameCode)
-  const name = useSelector(state => state.name.code)
+  const gameCode = 3451
+  const name = 3451
+  // const gameCode = useSelector(state => state.game.gameCode)
+  // const name = useSelector(state => state.name.code)
 
   const [currentName, setCurrentName] = useState(name)
   const db = firebase.firestore().collection('rooms').doc(`${gameCode}`)
@@ -524,43 +515,48 @@ const DoneCard = (props) => {
     db.get().then(
       doc => {
         if (doc.exists) {
-          const tempPlayers = doc.data().players
-          setPlayers(tempPlayers);
-          const ary = Object.entries(tempPlayers).map(([key, val]) => { return { key: key, val: val.order.indexOf(name) } }).sort((a, b) => a.val > b.val ? 1 : ((b.val > a.val) ? -1 : 0))
-          setOrders(ary)
-          console.log(ary)
-
-
-
+          setPlayers(doc.data().players);
         }
       }
     )
   }, [])
 
-  // const handleChange = (e) => {
-  //   setCurrentName(e.target.value)
-  // }
-  console.log(players)
+  useEffect(() => {
+    if (players) {
+      const tempPlayers = players
+      const ary = Object.entries(tempPlayers).map(([key, val]) => { return { key: key, val: val.order.indexOf(currentName) } }).sort((a, b) => a.val > b.val ? 1 : ((b.val > a.val) ? -1 : 0))
+      setOrders(ary)
+    }
+  }, [players, currentName])
+
+  const handleChange = (e, newValue) => {
+    setCurrentName(newValue)
+  }
+
   return (
-    <Container maxWidth="sm" className="container" style={{ marginTop: "3rem", marginBottom: "3rem" }}>
+    <Container maxWidth="sm" className="container" style={{ marginTop: "3rem", marginBottom: "3rem", }}>
       <CardContent>
         <div>
-          {players && <AppBar position="static">
-            {/* <Tabs value={currentName} onChange={handleChange} aria-label="simple tabs example">
-              {Object.keys(players).map((elem, index) =><Tab label={players[elem].userName} value={players[elem]}/> )}
-              
-            </Tabs> */}
-          </AppBar>}
-          {players && <h2 style={{ textAlign: 'center' }}>{players[currentName].userName}</h2>}
+          <Tabs
+            onChange={handleChange}
+            value={currentName}
+            indicatorColor="primary"
+            textColor="primary"
+            centered
+          >
+            {Object.keys(players).map(elem => <Tab label={players[elem].userName} value={players[elem].code} />)}
+
+
+          </Tabs>
+          {players && <h2 style={{ textAlign: 'center', fontFamily: 'Roboto' }}>{players[currentName].code}</h2>}
         </div>
       </CardContent>
       {orders && orders.map((elem, index) =>
         <div>{index % 2 === 0
           ?
-          <h2 style={{ textAlign: "center" }}>{players[elem.key][index]}</h2>
+          <h2 style={{ textAlign: "center", fontFamily: 'Roboto' }}>{players[elem.key][index]}</h2>
           :
           <div style={{ display: "flex", justifyContent: 'space-around', justifyContent: 'center' }}>
-            {/* <CanvasDraw disabled={true} saveData={players[players[currentName].order[index]][index]} hideInterface={true} /> */}
             <CanvasDraw disabled={true} saveData={players[elem.key][index]} hideInterface={true} />
 
           </div>}
