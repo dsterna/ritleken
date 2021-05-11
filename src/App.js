@@ -49,6 +49,7 @@ import temp2 from './assets/img/temp2.jpg'
  * Implement clock that can be turned off by Admin
  * 
  * Show user names in Done cards for each drawing/word
+ * Maybe put in a training page
  * 
  */
 
@@ -192,7 +193,7 @@ const StartCard = (props) => {
           Ritleken
         </Typography>
         <Typography variant="body2" color="textSecondary" component="p">
-          Tänk viskleken fast med penna och papper (typ). En spelare startar ett rum och resterande spelare joinar mha koden. När spelet börjar ska alla skriva ett ord som nästkommande spelare ska rita. Spelaren efter kommer i sin tur endast se den ritade bilden och ska gissa vad bilden föreställer. Spelet är slut när samtliga spelare ritat/skrivit på alla ord. Målet med speler är att samma ord håller genom spelet.
+          Tänk viskleken fast med penna och papper (typ). En spelare startar ett rum och resterande spelare joinar mha koden. När spelet börjar ska alla skriva ett ord som nästkommande spelare ska rita. Spelaren efter kommer i sin tur endast se den ritade bilden och ska gissa vad bilden föreställer. Spelet är slut när samtliga spelare har ritat eller skrivit alla ord. Målet med spelet är att startorden håller genom spelet.
         </Typography>
       </CardContent>
 
