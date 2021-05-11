@@ -42,15 +42,15 @@ import temp2 from './assets/img/temp2.jpg'
 /**
  * Todo:
  * 
- * Refactor components to files and move styles to scss
  * Add fetched to localstorage in drawState to handle user refresh 
- * test second game game code problem
- * style in Lobby card
+ * Refactor components to files and move styles to scss
  * Implement clock that can be turned off by Admin
- * 
+ * style in Lobby card
  * Show user names in Done cards for each drawing/word
  * Maybe put in a training page
  * 
+ * Done
+ * test second game game code problem . 
  */
 
 function App() {
@@ -103,9 +103,6 @@ const Canvas = React.forwardRef((props, ref) => {
   const handleLazyChange = (event, newValue) => {
     setLazyRadius(newValue);
   };
-  const handleColorChange = (event, newValue) => {
-    setColor(newValue);
-  };
 
   const theme = createMuiTheme({
     palette: {
@@ -120,7 +117,7 @@ const Canvas = React.forwardRef((props, ref) => {
 
   return (
     <ThemeProvider theme={theme}>
-      <CardActions style={{ display: "flex", justifyContent: 'space-around', justifyContent: 'center' }}>
+      <CardActions style={{ display: "flex", justifyContent: 'center' }}>
         <CanvasDraw disabled={ready || !drawRound} ref={ref} hideInterface={ready || !drawRound} brushRadius={brushRadius} brushColor={color} lazyRadius={lazyRadius} />
       </CardActions>
 
@@ -178,7 +175,6 @@ const Canvas = React.forwardRef((props, ref) => {
 const StartCard = (props) => {
   const name = useSelector(state => state.name)
   const dispatch = useDispatch()
-
   return (
     <Container maxWidth="sm" className="container" >
       <CardMedia
@@ -222,11 +218,9 @@ const LobbyCard = (props) => {
   const dispatch = useDispatch()
   const location = useLocation()
   const [playerObj, setPlayerObj] = useState({})
-
-
   const db = gameCode && firebase.firestore().collection('rooms').doc(`${gameCode}`)
-  useEffect(() => {
 
+  useEffect(() => {
     if (db) {
       if (isHost) {
         db.set({})
@@ -239,8 +233,6 @@ const LobbyCard = (props) => {
     else {
       history.push('/')
     }
-
-
   }, [])
 
 
@@ -255,8 +247,6 @@ const LobbyCard = (props) => {
           if (location.pathname === "/lobby") {
             if (snap?.data()) {
               if (Object.keys(snap.data()).length) {
-
-
                 setPlayers(Object.values(snap.data().players))
                 setPlayerObj(snap.data().players)
                 setGameStarted(snap.data().gameStarted)
@@ -310,20 +300,25 @@ const LobbyCard = (props) => {
   }, [gameStarted])
 
   return (
-    <Card className="card-class" style={{ padding: "1rem" }}>
+    <Container maxWidth="sm" className="container" style={{maxWidth: "17rem"}}  >
       <CardContent>
-        <Typography variant="h5" component="h2">
-          Lobby {gameCode}
+        <Typography gutterBottom variant="h5" component="h3" style={{ marginBottom: 0, textAlign: "center" }}>
+          Rum {gameCode}
         </Typography>
-        <ul>
-          {players.map((elem) => <li key={elem.code}>{elem.userName}</li>)}
+
+        <ul style={{ listStyleType: "circle", fontFamily: 'Roboto' }}>
+          {players.map((elem) => <li key={elem.code} style={{padding: "0.2rem"}}>{elem.userName}</li>)}
         </ul>
+
+
       </CardContent>
-      <CardActions >
-      </CardActions>
-      <TextField value={customName} id="outlined-basic" label="Namn" variant="outlined" onChange={(e) => {
-        setCustomName(e.target.value)
-      }} />
+      <CardContent style={{ display: "flex", justifyContent: 'space-around' }}>
+        <TextField value={customName} id="outlined-basic" label="Namn" variant="outlined" onChange={(e) => {
+          setCustomName(e.target.value)
+        }} />
+      </CardContent>
+      {/* <CardActions >
+      </CardActions> */}
       <CardActions style={{ display: "flex", justifyContent: 'space-around' }}>
         <Link to="/">   <Button size="small" color="primary" onClick={() => {
         }}>Avbryt </Button></Link>
@@ -333,7 +328,7 @@ const LobbyCard = (props) => {
         }}> Starta  </Button>
         }
       </CardActions>
-    </Card>
+    </Container>
   )
 }
 
