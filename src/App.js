@@ -14,7 +14,6 @@ import { changeCodeName, changeGameCode, changeName, isHost } from './actions'
 import { useDispatch, useSelector } from 'react-redux'
 
 import Alert from '@material-ui/lab/Alert';
-import AppBar from '@material-ui/core/AppBar';
 import Button from '@material-ui/core/Button';
 import CanvasDraw from "react-canvas-draw";
 import Card from '@material-ui/core/Card';
@@ -25,7 +24,6 @@ import Checkbox from '@material-ui/core/Checkbox';
 import ColorLensOutlinedIcon from '@material-ui/icons/ColorLensOutlined';
 import Container from '@material-ui/core/Container';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
-import Grid from '@material-ui/core/Grid';
 import HdrStrongOutlinedIcon from '@material-ui/icons/HdrStrongOutlined';
 import IconButton from '@material-ui/core/IconButton';
 import LineWeightOutlinedIcon from '@material-ui/icons/LineWeightOutlined';
@@ -40,6 +38,19 @@ import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import firebase from './config'
 import temp2 from './assets/img/temp2.jpg'
+
+/**
+ * Todo:
+ * 
+ * Refactor components to files and move styles to scss
+ * Add fetched to localstorage in drawState to handle user refresh 
+ * test second game game code problem
+ * style in Lobby card
+ * Implement clock that can be turned off by Admin
+ * 
+ * Show user names in Done cards for each drawing/word
+ * 
+ */
 
 function App() {
   return (
@@ -62,9 +73,6 @@ function App() {
             <Route exact path="/done">
               <DoneCard />
             </Route>
-            <Route exact path="/TempDraw">
-              <TempDraw />
-            </Route>
             <Route path="/">
               <StartCard />
             </Route>
@@ -75,17 +83,12 @@ function App() {
   );
 }
 
-const TempDraw = () => {
-
+const Canvas = React.forwardRef((props, ref) => {
+  const { ready, drawRound } = props
   const [brushRadius, setBrushRadius] = useState(6)
   const [lazyRadius, setLazyRadius] = useState(0)
   const [opacity, setOpacity] = useState(1)
   const [color, setColor] = useState('rgba(38, 50, 56, 1)')
-  const ref = useRef()
-  const word = "blä"
-  const ready = false
-  const drawRound = true
-  const text = ""
   const [index, setIndex] = useState(3)
 
   const handleRadiusChange = (event, newValue) => {
@@ -100,9 +103,9 @@ const TempDraw = () => {
     setLazyRadius(newValue);
   };
   const handleColorChange = (event, newValue) => {
-    console.log(newValue)
     setColor(newValue);
   };
+
   const theme = createMuiTheme({
     palette: {
       primary: {
@@ -116,81 +119,59 @@ const TempDraw = () => {
 
   return (
     <ThemeProvider theme={theme}>
-      <Container maxWidth="sm" className="container" >
-        <CardContent>
-          <Typography gutterBottom variant="h5" component="h2" style={{ textAlign: "center" }}>
-            {drawRound && `Rita ${word}`}
-          </Typography>
-        </CardContent>
-        <CardActions style={{ display: "flex", justifyContent: 'space-around', justifyContent: 'center' }}>
-          <CanvasDraw disabled={ready || !drawRound} ref={ref} brushRadius={brushRadius} brushColor={color} lazyRadius={lazyRadius} />
-        </CardActions>
-        {!drawRound && <CardActions style={{ display: "flex", justifyContent: 'space-around', justifyContent: 'center' }}>
-          <form onSubmit={() => { }} autoComplete="off"> <TextField disabled={ready} id="standard-basic" label="" value={text} /></form>
-        </CardActions>
-        }
-        <CardContent style={{ marginBottom: 0, maxWidth: "400px", marginLeft: "auto", marginRight: "auto", padding: 0 }} className={theme}>
-          <div style={{ display: "flex", justifyContent: 'space-around' }}>
-            <IconButton color="secondary" onClick={() => ref.current.undo()}>
-              <ReplayOutlined />
-            </IconButton>
-            <IconButton color={(index === 0) ? 'primary' : "secondary"} onClick={() => setIndex(0)} >
-              <HdrStrongOutlinedIcon />
-            </IconButton>
-            <IconButton color={(index === 1) ? 'primary' : "secondary"} onClick={() => setIndex(1)} >
-              <LineWeightOutlinedIcon />
-            </IconButton>
-            <IconButton color={(index === 2) ? 'primary' : "secondary"} onClick={() => setIndex(2)}>
-              <OpacityIcon />
-            </IconButton>
-            <IconButton color={(index === 3) ? 'primary' : "secondary"} onClick={() => setIndex(3)}>
-              <ColorLensOutlinedIcon />
-            </IconButton>
-          </div>
+      <CardActions style={{ display: "flex", justifyContent: 'space-around', justifyContent: 'center' }}>
+        <CanvasDraw disabled={ready || !drawRound} ref={ref} hideInterface={ready || !drawRound} brushRadius={brushRadius} brushColor={color} lazyRadius={lazyRadius} />
+      </CardActions>
 
-          <CardContent style={{ paddingTop: "0px", paddingBottom: "0px" }}>
-            {index === 0 &&
-              <Slider style={{ width: "100%" }} value={lazyRadius} onChange={handleLazyChange} aria-labelledby="continuous-slider" min={.5} max={50} step={0.5} />
-              // <Slider style={{ width: "100%" }} value={lazyRadius} onChange={handleLazyChange} aria-labelledby="continuous-slider" min={.5} max={50} step={0.5} />
-            }
-            {index === 1 &&
-              <Slider style={{ width: "100%" }} value={brushRadius} onChange={handleRadiusChange} aria-labelledby="continuous-slider" min={.5} max={25} step={0.5} />
-            }
-            {index === 2 &&
-              <Slider style={{ width: "100%" }} value={opacity} onChange={handleOpacityChange} aria-labelledby="continuous-slider" min={0.1} max={1} step={0.1} />
-            }
-          </CardContent>
+      {(drawRound) && <CardContent style={{ marginBottom: 0, maxWidth: "400px", marginLeft: "auto", marginRight: "auto", padding: 0 }}>
+        <div style={{ display: "flex", justifyContent: 'space-around' }}>
+          <IconButton color="secondary" onClick={() => ref.current.undo()}>
+            <ReplayOutlined />
+          </IconButton>
+          <IconButton color={(index === 0) ? 'primary' : "secondary"} onClick={() => setIndex(0)} >
+            <HdrStrongOutlinedIcon />
+          </IconButton>
+          <IconButton color={(index === 1) ? 'primary' : "secondary"} onClick={() => setIndex(1)} >
+            <LineWeightOutlinedIcon />
+          </IconButton>
+          <IconButton color={(index === 2) ? 'primary' : "secondary"} onClick={() => setIndex(2)}>
+            <OpacityIcon />
+          </IconButton>
+          <IconButton color={(index === 3) ? 'primary' : "secondary"} onClick={() => setIndex(3)}>
+            <ColorLensOutlinedIcon />
+          </IconButton>
+        </div>
 
-          {index === 3 &&
-            <span style={{ padding: "0", display: "flex", justifyContent: 'space-around' }} >
-
-              {["244, 67, 54", "156, 39, 176", "33, 150, 243", "76, 175, 80", "255, 235, 59", "255, 152, 0", "158, 158, 158", "38, 50, 56"].map(elem =>
-                <Radio value={`rgba(${elem}, ${opacity})`}
-                  checked={color === `rgba(${elem}, ${opacity})`}
-                  onChange={e => setColor(e.target.value)}
-                  style={{ color: `rgba(${elem}, ${1})` }}
-                />)}
-            </span>
+        <CardContent style={{ paddingTop: "0px", paddingBottom: "0px" }}>
+          {index === 0 &&
+            <Slider style={{ width: "100%" }} value={lazyRadius} onChange={handleLazyChange} aria-labelledby="continuous-slider" min={.5} max={50} step={0.5} />
+          }
+          {index === 1 &&
+            <Slider style={{ width: "100%" }} value={brushRadius} onChange={handleRadiusChange} aria-labelledby="continuous-slider" min={.5} max={25} step={0.5} />
+          }
+          {index === 2 &&
+            <Slider style={{ width: "100%" }} value={opacity} onChange={handleOpacityChange} aria-labelledby="continuous-slider" min={0.1} max={1} step={0.1} />
           }
         </CardContent>
-        <CardActions style={{ display: "flex", justifyContent: 'space-around' }}>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={ready}
-                name="checkedB"
-                color="primary"
-                disabled={ready}
-              />
-            }
-            label={`Redo (${1})`}
-          />
-        </CardActions>
-      </Container>
+
+        {index === 3 &&
+          <span style={{ padding: "0", display: "flex", justifyContent: 'space-around' }} >
+
+            {["244, 67, 54", "156, 39, 176", "33, 150, 243", "76, 175, 80", "255, 235, 59", "255, 152, 0", "158, 158, 158", "38, 50, 56"].map((elem, index) =>
+              <Radio value={`rgba(${elem}, ${opacity})`}
+                key={index}
+                checked={color === `rgba(${elem}, ${opacity})`}
+                onChange={e => setColor(e.target.value)}
+                style={{ color: `rgba(${elem}, ${1})` }}
+              />)}
+          </span>
+        }
+      </CardContent>
+      }
     </ThemeProvider >
 
   )
-}
+})
 
 
 const StartCard = (props) => {
@@ -211,7 +192,7 @@ const StartCard = (props) => {
           Ritleken
         </Typography>
         <Typography variant="body2" color="textSecondary" component="p">
-          Lorem, ipsum dolor sit amet consectetur adipisicing elit. Saepe non rem inventore repellendus est exercitationem nihil earum consequatur libero corrupti?
+          Tänk viskleken fast med penna och papper (typ). En spelare startar ett rum och resterande spelare joinar mha koden. När spelet börjar ska alla skriva ett ord som nästkommande spelare ska rita. Spelaren efter kommer i sin tur endast se den ritade bilden och ska gissa vad bilden föreställer. Spelet är slut när samtliga spelare ritat/skrivit på alla ord. Målet med speler är att samma ord håller genom spelet.
         </Typography>
       </CardContent>
 
@@ -224,7 +205,6 @@ const StartCard = (props) => {
           dispatch(changeGameCode(name.code))
         }
         }>Skapa rum</Button></Link>
-
       </CardActions>
     </Container>
   )
@@ -595,29 +575,12 @@ const DrawCard = () => {
         <Typography gutterBottom variant="h5" component="h2" style={{ textAlign: "center" }}>
           {drawRound && `Rita ${word}`}
         </Typography>
-
       </CardContent>
-      <CardActions style={{ display: "flex", justifyContent: 'center' }}>
-        <CanvasDraw disabled={ready || !drawRound} ref={ref} />
-      </CardActions>
+      <Canvas ready={ready} drawRound={drawRound} ref={ref} />
       {!drawRound && <CardActions style={{ display: "flex", justifyContent: 'center' }}>
         <form onSubmit={(e) => handleDone(e)} autoComplete="off"> <TextField disabled={ready} id="standard-basic" label="" value={text} onChange={(e) => { setText(e.target.value) }} /></form>
       </CardActions>
       }
-      <div style={{ display: "flex", justifyContent: 'space-around', maxWidth: "400px", marginLeft: "auto", marginRight: "auto" }}>
-        <IconButton aria-label="delete" onClick={() => ref.current.undo()}>
-          <ReplayOutlined />
-        </IconButton>
-        <IconButton aria-label="delete" disabled color="primary" >
-          <HdrStrongOutlinedIcon />
-        </IconButton>
-        <IconButton color="secondary" aria-label="add an alarm">
-          <LineWeightOutlinedIcon />
-        </IconButton>
-        <IconButton color="primary" aria-label="add to shopping cart">
-          <ColorLensOutlinedIcon />
-        </IconButton>
-      </div>
       <CardActions style={{ display: "flex", justifyContent: 'space-around' }}>
         <FormControlLabel
           control={
@@ -637,8 +600,8 @@ const DrawCard = () => {
 }
 
 const DoneCard = (props) => {
-  // const gameCode = 3451
-  // const name = 3451
+  // const gameCode = 8475
+  // const name = 8475
   const gameCode = useSelector(state => state.game.gameCode)
   const name = useSelector(state => state.name.code)
 
@@ -648,6 +611,8 @@ const DoneCard = (props) => {
   const [orders, setOrders] = useState()
   const dispatch = useDispatch()
   const history = useHistory()
+
+  const ref = useRef()
   useEffect(() => {
     if (!db) {
       history.push('/')
@@ -672,12 +637,6 @@ const DoneCard = (props) => {
   const handleChange = (e, newValue) => {
     setCurrentName(newValue)
   }
-  function a11yProps(index) {
-    return {
-      id: `scrollable-auto-tab-${index}`,
-      'aria-controls': `scrollable-auto-tabpanel-${index}`,
-    };
-  }
 
   return (
     <Container maxWidth="sm" className="container" style={{ marginTop: "3rem", marginBottom: "3rem", }}>
@@ -688,9 +647,9 @@ const DoneCard = (props) => {
             value={currentName}
             indicatorColor="primary"
             textColor="primary"
-
+            variant="scrollable"
           >
-            {Object.keys(players).map((elem, index) => <Tab key={index} label={players[elem].userName} value={players[elem].code} {...a11yProps(index)} />)}
+            {Object.keys(players).map((elem, index) => <Tab key={index} label={players[elem].userName} value={players[elem].code} />)}
           </Tabs>
         </div>}
       </CardContent>
@@ -702,8 +661,7 @@ const DoneCard = (props) => {
             <h2 style={{ textAlign: "center", fontFamily: 'Roboto' }}>{players[elem.key][index]}</h2>
             :
             <div style={{ display: "flex", justifyContent: 'center' }}>
-              <CanvasDraw disabled={true} saveData={players[elem.key][index]} hideInterface={true} style={{ touchAction: "pan-y" }} />
-
+              <CanvasDraw disabled={true} ref={ref} saveData={players[elem.key][index]} loadTimeOffset={0.4} hideInterface={true} style={{ touchAction: "pan-y" }} />
             </div>}
           </div>)
       }
