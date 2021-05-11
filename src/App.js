@@ -9,12 +9,12 @@ import {
   useLocation,
 } from "react-router-dom";
 import React, { useEffect, useRef, useState } from 'react'
+import { ThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 import { changeCodeName, changeGameCode, changeName, isHost } from './actions'
 import { useDispatch, useSelector } from 'react-redux'
 
-import AddShoppingCartIcon from '@material-ui/icons/AddShoppingCart';
-import AlarmIcon from '@material-ui/icons/Alarm';
 import Alert from '@material-ui/lab/Alert';
+import AppBar from '@material-ui/core/AppBar';
 import Button from '@material-ui/core/Button';
 import CanvasDraw from "react-canvas-draw";
 import Card from '@material-ui/core/Card';
@@ -24,12 +24,15 @@ import CardMedia from '@material-ui/core/CardMedia';
 import Checkbox from '@material-ui/core/Checkbox';
 import ColorLensOutlinedIcon from '@material-ui/icons/ColorLensOutlined';
 import Container from '@material-ui/core/Container';
-import DeleteIcon from '@material-ui/icons/Delete';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
+import Grid from '@material-ui/core/Grid';
 import HdrStrongOutlinedIcon from '@material-ui/icons/HdrStrongOutlined';
 import IconButton from '@material-ui/core/IconButton';
 import LineWeightOutlinedIcon from '@material-ui/icons/LineWeightOutlined';
+import OpacityIcon from '@material-ui/icons/Opacity';
+import Radio from '@material-ui/core/Radio';
 import ReplayOutlined from '@material-ui/icons/ReplayOutlined';
+import Slider from '@material-ui/core/Slider';
 import Snackbar from '@material-ui/core/Snackbar';
 import Tab from '@material-ui/core/Tab';
 import Tabs from '@material-ui/core/Tabs';
@@ -72,56 +75,120 @@ function App() {
   );
 }
 
-
 const TempDraw = () => {
+
+  const [brushRadius, setBrushRadius] = useState(6)
+  const [lazyRadius, setLazyRadius] = useState(0)
+  const [opacity, setOpacity] = useState(1)
+  const [color, setColor] = useState('rgba(38, 50, 56, 1)')
   const ref = useRef()
   const word = "blä"
   const ready = false
   const drawRound = true
   const text = ""
-  return (
-    <Container maxWidth="sm" className="container" >
-      <CardContent>
-        <Typography gutterBottom variant="h5" component="h2" style={{ textAlign: "center" }}>
-          {drawRound && `Rita ${word}`}
-        </Typography>
-      </CardContent>
-      <CardActions style={{ display: "flex", justifyContent: 'space-around', justifyContent: 'center' }}>
-        <CanvasDraw disabled={ready || !drawRound} ref={ref} />
-      </CardActions>
-      {!drawRound && <CardActions style={{ display: "flex", justifyContent: 'space-around', justifyContent: 'center' }}>
-        <form onSubmit={() => { }} autoComplete="off"> <TextField disabled={ready} id="standard-basic" label="" value={text} /></form>
-      </CardActions>
-      }
-      <div style={{ display: "flex", justifyContent: 'space-around' }}>
-        <IconButton aria-label="delete" onClick={() => ref.current.undo()}>
-          <ReplayOutlined />
-        </IconButton>
-        <IconButton aria-label="delete" disabled color="primary" >
-          <HdrStrongOutlinedIcon />
-        </IconButton>
-        <IconButton color="secondary" aria-label="add an alarm">
-          <LineWeightOutlinedIcon />
-        </IconButton>
-        <IconButton color="primary" aria-label="add to shopping cart">
-          <ColorLensOutlinedIcon />
-        </IconButton>
-      </div>
-      <CardActions style={{ display: "flex", justifyContent: 'space-around' }}>
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={ready}
+  const [index, setIndex] = useState(3)
 
-              name="checkedB"
-              color="primary"
-              disabled={ready}
-            />
+  const handleRadiusChange = (event, newValue) => {
+    setBrushRadius(newValue);
+  };
+  const handleOpacityChange = (event, newValue) => {
+    const newColor = color.replace(/rgba?(\(\s*\d+\s*,\s*\d+\s*,\s*\d+)(?:\s*,.+?)?\)/, `rgba$1,${newValue})`);
+    setColor(newColor)
+    setOpacity(newValue);
+  };
+  const handleLazyChange = (event, newValue) => {
+    setLazyRadius(newValue);
+  };
+  const handleColorChange = (event, newValue) => {
+    console.log(newValue)
+    setColor(newValue);
+  };
+  const theme = createMuiTheme({
+    palette: {
+      primary: {
+        main: color
+      },
+      secondary: {
+        main: '#9e9e9e',
+      },
+    },
+  });
+
+  return (
+    <ThemeProvider theme={theme}>
+      <Container maxWidth="sm" className="container" >
+        <CardContent>
+          <Typography gutterBottom variant="h5" component="h2" style={{ textAlign: "center" }}>
+            {drawRound && `Rita ${word}`}
+          </Typography>
+        </CardContent>
+        <CardActions style={{ display: "flex", justifyContent: 'space-around', justifyContent: 'center' }}>
+          <CanvasDraw disabled={ready || !drawRound} ref={ref} brushRadius={brushRadius} brushColor={color} lazyRadius={lazyRadius} />
+        </CardActions>
+        {!drawRound && <CardActions style={{ display: "flex", justifyContent: 'space-around', justifyContent: 'center' }}>
+          <form onSubmit={() => { }} autoComplete="off"> <TextField disabled={ready} id="standard-basic" label="" value={text} /></form>
+        </CardActions>
+        }
+        <CardContent style={{ marginBottom: 0, maxWidth: "400px", marginLeft: "auto", marginRight: "auto", padding: 0 }} className={theme}>
+          <div style={{ display: "flex", justifyContent: 'space-around' }}>
+            <IconButton color="secondary" onClick={() => ref.current.undo()}>
+              <ReplayOutlined />
+            </IconButton>
+            <IconButton color={(index === 0) ? 'primary' : "secondary"} onClick={() => setIndex(0)} >
+              <HdrStrongOutlinedIcon />
+            </IconButton>
+            <IconButton color={(index === 1) ? 'primary' : "secondary"} onClick={() => setIndex(1)} >
+              <LineWeightOutlinedIcon />
+            </IconButton>
+            <IconButton color={(index === 2) ? 'primary' : "secondary"} onClick={() => setIndex(2)}>
+              <OpacityIcon />
+            </IconButton>
+            <IconButton color={(index === 3) ? 'primary' : "secondary"} onClick={() => setIndex(3)}>
+              <ColorLensOutlinedIcon />
+            </IconButton>
+          </div>
+
+          <CardContent style={{ paddingTop: "0px", paddingBottom: "0px" }}>
+            {index === 0 &&
+              <Slider style={{ width: "100%" }} value={lazyRadius} onChange={handleLazyChange} aria-labelledby="continuous-slider" min={.5} max={50} step={0.5} />
+              // <Slider style={{ width: "100%" }} value={lazyRadius} onChange={handleLazyChange} aria-labelledby="continuous-slider" min={.5} max={50} step={0.5} />
+            }
+            {index === 1 &&
+              <Slider style={{ width: "100%" }} value={brushRadius} onChange={handleRadiusChange} aria-labelledby="continuous-slider" min={.5} max={25} step={0.5} />
+            }
+            {index === 2 &&
+              <Slider style={{ width: "100%" }} value={opacity} onChange={handleOpacityChange} aria-labelledby="continuous-slider" min={0.1} max={1} step={0.1} />
+            }
+          </CardContent>
+
+          {index === 3 &&
+            <span style={{ padding: "0", display: "flex", justifyContent: 'space-around' }} >
+
+              {["244, 67, 54", "156, 39, 176", "33, 150, 243", "76, 175, 80", "255, 235, 59", "255, 152, 0", "158, 158, 158", "38, 50, 56"].map(elem =>
+                <Radio value={`rgba(${elem}, ${opacity})`}
+                  checked={color === `rgba(${elem}, ${opacity})`}
+                  onChange={e => setColor(e.target.value)}
+                  style={{ color: `rgba(${elem}, ${1})` }}
+                />)}
+            </span>
           }
-          label={`Redo (${1})`}
-        />
-      </CardActions>
-    </Container>
+        </CardContent>
+        <CardActions style={{ display: "flex", justifyContent: 'space-around' }}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={ready}
+                name="checkedB"
+                color="primary"
+                disabled={ready}
+              />
+            }
+            label={`Redo (${1})`}
+          />
+        </CardActions>
+      </Container>
+    </ThemeProvider >
+
   )
 }
 
@@ -537,7 +604,7 @@ const DrawCard = () => {
         <form onSubmit={(e) => handleDone(e)} autoComplete="off"> <TextField disabled={ready} id="standard-basic" label="" value={text} onChange={(e) => { setText(e.target.value) }} /></form>
       </CardActions>
       }
-      <div style={{ display: "flex", justifyContent: 'space-around' }}>
+      <div style={{ display: "flex", justifyContent: 'space-around', maxWidth: "400px", marginLeft: "auto", marginRight: "auto" }}>
         <IconButton aria-label="delete" onClick={() => ref.current.undo()}>
           <ReplayOutlined />
         </IconButton>

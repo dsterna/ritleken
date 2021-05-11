@@ -1,6 +1,10 @@
-body{
-  background: rgb(207,232,252);
-background: linear-gradient(0deg, rgba(207,232,252,1) 10%, rgba(251,253,255,1) 100%);
+body {
+  background: rgb(207, 232, 252);
+  background: linear-gradient(
+    0deg,
+    rgba(207, 232, 252, 1) 10%,
+    rgba(251, 253, 255, 1) 100%
+  );
   background-color: #cfe8fc;
   min-height: 100vh;
   margin: 0;
