@@ -45,11 +45,11 @@ import temp2 from './assets/img/temp2.jpg'
  * Add fetched to localstorage in drawState to handle user refresh 
  * Refactor components to files and move styles to scss
  * Implement clock that can be turned off by Admin
- * style in Lobby card
  * Show user names in Done cards for each drawing/word
  * Maybe put in a training page
  * 
  * Done
+ * style in Lobby card
  * test second game game code problem . 
  */
 
@@ -126,9 +126,9 @@ const Canvas = React.forwardRef((props, ref) => {
           <IconButton color="secondary" onClick={() => ref.current.undo()}>
             <ReplayOutlined />
           </IconButton>
-          <IconButton color={(index === 0) ? 'primary' : "secondary"} onClick={() => setIndex(0)} >
+          {/* <IconButton color={(index === 0) ? 'primary' : "secondary"} onClick={() => setIndex(0)} >
             <HdrStrongOutlinedIcon />
-          </IconButton>
+          </IconButton> */}
           <IconButton color={(index === 1) ? 'primary' : "secondary"} onClick={() => setIndex(1)} >
             <LineWeightOutlinedIcon />
           </IconButton>
