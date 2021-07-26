@@ -21,6 +21,7 @@ import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
 import CardMedia from '@material-ui/core/CardMedia';
 import Checkbox from '@material-ui/core/Checkbox';
+import { CircularProgressWithLabel } from './CircularProgressWithLabel'
 import ColorLensOutlinedIcon from '@material-ui/icons/ColorLensOutlined';
 import Container from '@material-ui/core/Container';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
@@ -214,6 +215,8 @@ const LobbyCard = (props) => {
   const [players, setPlayers] = useState([])
   const [customName, setCustomName] = useState(name.userName)
   const [gameStarted, setGameStarted] = useState(false)
+  const [time, setTime] = useState(60)
+  const [submittedTime, setSubmittedTime] = useState(time)
   const history = useHistory();
   const dispatch = useDispatch()
   const location = useLocation()
@@ -238,7 +241,6 @@ const LobbyCard = (props) => {
 
   useEffect(() => {
     if (db) {
-
       const unsubscribe = firebase
         .firestore()
         .collection('rooms')
@@ -250,6 +252,8 @@ const LobbyCard = (props) => {
                 setPlayers(Object.values(snap.data().players))
                 setPlayerObj(snap.data().players)
                 setGameStarted(snap.data().gameStarted)
+                if (snap.data().timer)
+                  setTime(snap.data().timer)
               }
             }
           }
@@ -261,20 +265,30 @@ const LobbyCard = (props) => {
   }, [])
 
   useEffect(() => {
+
     const fetchData = async () => {
       let newName = customName !== "" ? customName : `player-${name.code}`
       dispatch(changeName(newName))
       try {
         db.update({
+
           [`players.${name.code}`]: { ...name, userName: newName, isHost: isHost },
-          gameStarted: false
+          gameStarted: false, timer: isHost ? submittedTime : time
         })
       } catch {
       }
     };
     fetchData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [customName]);
+  }, [customName, submittedTime]);
+
+  const handleTimeChange = (event, newValue) => {
+    setTime(newValue)
+  }
+  const handleTimeSubmit = (event, newValue) => {
+    setSubmittedTime(newValue)
+  }
+
 
   const setUpGameQueue = () => {
     let len = players.length - 1
@@ -291,7 +305,6 @@ const LobbyCard = (props) => {
     db.update({ round: 0, rounds: len + 1, players: playerObject })
   }
 
-
   useEffect(() => {
     if (gameStarted) {
       history.push("/write")
@@ -300,14 +313,15 @@ const LobbyCard = (props) => {
   }, [gameStarted])
 
   return (
-    <Container maxWidth="sm" className="container" style={{maxWidth: "17rem"}}  >
+    <Container maxWidth="sm" className="container" style={{ maxWidth: "17rem" }}  >
       <CardContent>
         <Typography gutterBottom variant="h5" component="h3" style={{ marginBottom: 0, textAlign: "center" }}>
           Rum {gameCode}
         </Typography>
 
+
         <ul style={{ listStyleType: "circle", fontFamily: 'Roboto' }}>
-          {players.map((elem) => <li key={elem.code} style={{padding: "0.2rem"}}>{elem.userName}</li>)}
+          {players.map((elem) => <li key={elem.code} style={{ padding: "0.2rem" }}>{elem.userName}</li>)}
         </ul>
 
 
@@ -317,8 +331,23 @@ const LobbyCard = (props) => {
           setCustomName(e.target.value)
         }} />
       </CardContent>
-      {/* <CardActions >
-      </CardActions> */}
+      <CardContent >
+        <Typography id="discrete-slider-small-steps" style={{ marginBottom: 0, textAlign: "center" }} >
+          Tid per runda: {time}s
+      </Typography>
+        <Slider
+          defaultValue={time}
+          value={time}
+          disabled={!isHost}
+          aria-labelledby="discrete-slider-small-steps"
+          step={5}
+          marks
+          min={10}
+          max={120}
+          valueLabelDisplay="auto"
+          onChange={handleTimeChange}
+          onChangeCommitted={handleTimeSubmit}
+        /></CardContent>
       <CardActions style={{ display: "flex", justifyContent: 'space-around' }}>
         <Link to="/">   <Button size="small" color="primary" onClick={() => {
         }}>Avbryt </Button></Link>
@@ -398,12 +427,19 @@ const WriteCard = (props) => {
   const [round, setRound] = useState(0)
   const [nrOfReady, setNrOfReady] = useState(0)
   const [ready, setReady] = useState(false)
+  const [time, setTime] = useState()
+  const [countDown, setCountDown] = useState()
   const history = useHistory();
   const location = useLocation()
 
 
   useEffect(() => {
-
+    if (!time)
+      db.get().then(
+        doc => {
+          setTime(doc.data().timer);
+        }
+      )
     const unsubscribe = db.onSnapshot((snap) => {
       if (location.pathname === "/write") {
         if (snap.data()) {
@@ -416,13 +452,19 @@ const WriteCard = (props) => {
         }
       }
     })
+
     return () => unsubscribe()
   }, [])
 
+
   const handleDone = (e) => {
-    e.preventDefault()
     if (text === "") {
-      return
+      if (countDown === 0) {
+
+      }
+      else {
+        return
+      }
     }
     setReady(true)
     const tempPlayer = players[name]
@@ -435,7 +477,7 @@ const WriteCard = (props) => {
   }
 
   useEffect(() => {
-    if (nrOfReady === nrOfPlayers) {
+    if (nrOfReady === nrOfPlayers || countDown === 0) {
       if (isHost) {
         const tempPlayers = players
         Object.keys(players).forEach((elem) => tempPlayers[elem].ready = false)
@@ -445,15 +487,40 @@ const WriteCard = (props) => {
     }
   }, [nrOfReady])
 
+  useEffect(() => {
+    if (!countDown) {
+      setCountDown(time)
+    }
+    if (countDown === 0) {
+      handleDone()
+    }
+    else {
+      const interval = setInterval(() => {
+        setCountDown(countDown - 1);
+      }, 1000)
+
+      return () => {
+        clearInterval(interval);
+      }
+    }
+  }, [countDown])
+
   return (
     <Container maxWidth="sm" className="container" >
-      <CardContent>
-        <Typography gutterBottom variant="h5" component="h3" style={{ marginBottom: 0, textAlign: "center" }}>
+      <CardContent style={{ display: "flex", justifyContent: "space-between" }}>
+        <div style={{ width: "33.3%" }}>
+          {countDown && <CircularProgressWithLabel value={countDown} max={time} isHost={isHost} setNrOfReady={setNrOfReady} nrOfPlayers={nrOfPlayers} />}
+        </div>
+        <Typography gutterBottom variant="h5" component="h3" style={{ marginBottom: 0, width: "33.3%", textAlign: 'center' }}>
           Skriv ditt ord:
         </Typography>
+        <div style={{ width: "33.3%" }}></div>
       </CardContent>
       <CardActions style={{ display: "flex", justifyContent: 'center' }}>
-        <form onSubmit={(e) => handleDone(e)} autoComplete="off"> <TextField disabled={ready} id="standard-basic" label="" value={text} onChange={(e) => { setText(e.target.value) }} /></form>
+        <form onSubmit={(e) => {
+          e.preventDefault()
+          handleDone(e)
+        }} autoComplete="off"> <TextField disabled={ready} id="standard-basic" label="" value={text} onChange={(e) => { setText(e.target.value) }} /></form>
         <br />
       </CardActions>
       <CardActions style={{ display: "flex", justifyContent: 'space-around' }}>
